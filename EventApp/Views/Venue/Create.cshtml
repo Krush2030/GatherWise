@@ -1,0 +1,69 @@
+﻿@model GatherWise.Domain.Entities.Venue
+
+@{
+    ViewData["Title"] = "List a New Venue";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-header bg-primary text-white p-4 rounded-top">
+                    <h3 class="mb-0 fw-bold"><i class="bi bi-building border-end pe-2 me-2"></i>List a New Venue</h3>
+                    <p class="text-white-50 mb-0 small">Fill out the detailed specifications to register your event venue onto GatherWise.</p>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label asp-for="Name" class="form-label fw-semibold">Venue Name</label>
+                                <input asp-for="Name" class="form-control" placeholder="e.g., Grand Palace Ballroom" />
+                                <span asp-validation-for="Name" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-12">
+                                <label asp-for="Location" class="form-label fw-semibold">Address / Location</label>
+                                <input asp-for="Location" class="form-control" placeholder="e.g., MG Road, Pune, Maharashtra" />
+                                <span asp-validation-for="Location" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="Capacity" class="form-label fw-semibold">Maximum Capacity (Guests)</label>
+                                <input asp-for="Capacity" type="number" class="form-control" placeholder="e.g., 500" />
+                                <span asp-validation-for="Capacity" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="PricePerSlot" class="form-label fw-semibold">Price Per Booking Slot (₹)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    <input asp-for="PricePerSlot" type="number" step="0.01" class="form-control" placeholder="50000.00" />
+                                </div>
+                                <span asp-validation-for="PricePerSlot" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-12">
+                                <label asp-for="Description" class="form-label fw-semibold">Description / Highlights</label>
+                                <textarea asp-for="Description" class="form-control" rows="4" placeholder="Describe amenities, parking capacity, catering options..."></textarea>
+                                <span asp-validation-for="Description" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
+                            <a asp-action="Index" class="btn btn-outline-secondary px-4 rounded-pill">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-4 rounded-pill shadow-sm">Save Venue</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

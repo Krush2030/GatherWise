@@ -1,0 +1,49 @@
+﻿@model GatherWise.Domain.Entities.Venue
+
+@{
+    ViewData["Title"] = "Venue Details";
+}
+
+<div class="container mt-5">
+    <div class="card shadow border-0 rounded-3">
+        <div class="card-header bg-dark text-white p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1 fw-bold">@Model.Name</h2>
+                    <p class="mb-0 text-white-50"><i class="bi bi-geo-alt-fill text-danger"></i> @Model.Location</p>
+                </div>
+                <div>
+                    <span class="badge @(Model.IsAvailable ? "bg-success" : "bg-danger") fs-6 px-3 py-2 rounded-pill">
+                        @(Model.IsAvailable ? "Available" : "Unavailable")
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-4">
+                <div class="col-md-6 border-end">
+                    <h5 class="text-muted uppercase small fw-bold mb-3">Specifications</h5>
+                    <div class="mb-3">
+                        <label class="text-secondary small d-block">Maximum Capacity</label>
+                        <span class="fs-4 fw-semibold text-dark">@Model.Capacity Guests</span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-secondary small d-block">Rental Price Per Slot</label>
+                        <span class="fs-4 fw-semibold text-success">₹@Model.PricePerSlot.ToString("N2")</span>
+                    </div>
+                </div>
+                <div class="col-md-6 ps-md-4">
+                    <h5 class="text-muted uppercase small fw-bold mb-3">About the Venue</h5>
+                    <p class="text-secondary lead fs-6" style="white-space: pre-line;">
+                        @(string.IsNullOrEmpty(Model.Description) ? "No description provided for this venue." : Model.Description)
+                    </p>
+                </div>
+            </div>
+            <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
+                <a asp-action="Index" class="btn btn-outline-secondary px-4 rounded-pill">Back to List</a>
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning px-4 rounded-pill shadow-sm text-darkfw-semibold">Edit Venue</a>
+                <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger px-4 rounded-pill shadow-sm">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>

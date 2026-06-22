@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="EventApp/GatherWise.Web.csproj" />
+  <Project Path="GatherWise.DataAccess/GatherWise.DataAccess.csproj" />
+  <Project Path="GatherWise.Domain/GatherWise.Domain.csproj" />
+  <Project Path="GatherWise.Services/GatherWise.Services.csproj" />
+</Solution>
