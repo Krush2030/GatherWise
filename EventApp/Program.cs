@@ -1,6 +1,8 @@
 using GatherWise.DataAccess.Data;
+using GatherWise.Domain.Entities;
 using GatherWise.Services.Implementations;
 using GatherWise.Services.Interfaces;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace EventApp
@@ -20,7 +22,17 @@ namespace EventApp
                 options.UseSqlServer(connectionString));
 
             builder.Services.AddScoped<IVenueService, VenueService>();
+            builder.Services.AddScoped<ISlotService, SlotService>();
+            builder.Services.AddScoped<IBookingService, BookingService>();
 
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => {
+                options.Password.RequireDigit = true;
+                options.Password.RequiredLength = 6;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+            })
+            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddDefaultTokenProviders();
 
             var app = builder.Build();
 
@@ -33,8 +45,10 @@ namespace EventApp
             }
 
             app.UseHttpsRedirection();
+            app.UseStaticFiles();
             app.UseRouting();
-
+            // CRUCIAL: Make sure Authentication is placed directly BEFORE Authorization
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapStaticAssets();

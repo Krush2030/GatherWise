@@ -1,0 +1,70 @@
+﻿@model IEnumerable<GatherWise.Domain.Entities.Slot>
+
+@{
+    ViewData["Title"] = "Manage Time Slots";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="display-5 fw-bold text-dark">Venue Availability Slots</h1>
+            <p class="text-muted">Allocate and schedule operational timelines across your registered properties.</p>
+        </div>
+        <div>
+            <a class="btn btn-primary btn-lg shadow-sm" asp-action="Create">+ Add New Time Slot</a>
+        </div>
+    </div>
+
+    <hr class="mb-4" />
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-warning text-center shadow-sm p-5" role="alert">
+            <h4 class="alert-heading fw-bold">No Operational Slots Scheduled!</h4>
+            <p class="mb-0">There are no time slots defined yet. Generate calendar entries so customers can begin booking venues.</p>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="ps-4">Venue Name</th>
+                            <th>Target Date</th>
+                            <th>Start Time</th>
+                            <th>End Time</th>
+                            <th>Status</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var slot in Model)
+                        {
+                            <tr>
+                                <td class="ps-4 fw-semibold text-primary">@slot.Venue?.Name</td>
+                                <td>@slot.Date.ToString("dd-MMM-yyyy")</td>
+                                <td>@slot.StartTime.ToString(@"hh\:mm")</td>
+                                <td>@slot.EndTime.ToString(@"hh\:mm")</td>
+                                <td>
+                                    @if (slot.IsBooked)
+                                    {
+                                        <span class="badge bg-danger rounded-pill px-3 py-2">Reserved</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success rounded-pill px-3 py-2">Available</span>
+                                    }
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a asp-action="Delete" asp-route-id="@slot.Id" class="btn btn-sm btn-outline-danger rounded-pill px-3">Remove</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

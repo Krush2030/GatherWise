@@ -1,4 +1,9 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@using GatherWise.Domain.Entities
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -29,6 +34,40 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Venue" asp-action="Index">Venues</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Slot" asp-action="Index">Slots</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Booking" asp-action="Index">Bookings</a>
+                        </li>
+
+                    </ul>
+
+                    <ul class="navbar-nav gap-2">
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            // Fetch the user object or display name claim directly
+                            var currentUser = await UserManager.GetUserAsync(User);
+                            <li class="nav-item d-flex align-items-center me-2">
+                                <span class="navbar-text text-dark fw-semibold">
+                                    <i class="bi bi-person-circle text-primary me-1"></i> Hello, @(currentUser?.FullName ?? User.Identity?.Name)
+                                </span>
+                            </li>
+                            <li class="nav-item">
+                                <form class="form-inline" asp-controller="Account" asp-action="Logout" method="post">
+                                    <button type="submit" class="nav-link btn btn-link text-danger border-0 fw-semibold align-baseline">Logout</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="btn btn-outline-primary rounded-pill px-3" asp-controller="Account" asp-action="Login">Login</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-primary rounded-pill px-3 shadow-sm" asp-controller="Account" asp-action="Register">Register</a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>
