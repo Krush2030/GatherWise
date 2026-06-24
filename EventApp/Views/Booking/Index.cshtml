@@ -1,18 +1,26 @@
 ﻿@model IEnumerable<GatherWise.Domain.Entities.Booking>
+@using System.Security.Claims
+@using GatherWise.Domain.Enums
 
 @{
-    ViewData["Title"] = "Event Bookings";
+    ViewData["Title"] = "My Reservations";
+    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 }
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="display-5 fw-bold text-dark">Event Bookings Log</h1>
-            <p class="text-muted">Track reservations, dates, and total financial invoicing statements.</p>
+            <h1 class="display-5 fw-bold text-dark">Event Reservations</h1>
+            <p class="text-muted">Track execution statuses, rental billing invoices, and scheduling states across system bookings.</p>
         </div>
-        <div>
-            <a class="btn btn-success btn-lg shadow-sm" asp-action="Create">Reserve a New Venue</a>
-        </div>
+        @if (User.IsInRole("Admin") || User.IsInRole("Event Host"))
+        {
+            <div>
+                <a class="btn btn-success btn-lg shadow-sm rounded-pill px-4" asp-action="Create">
+                    <i class="bi bi-journal-plus me-1"></i> Book a New Venue
+                </a>
+            </div>
+        }
     </div>
 
     <hr class="mb-4" />
@@ -20,8 +28,12 @@
     @if (!Model.Any())
     {
         <div class="alert alert-info text-center shadow-sm p-5" role="alert">
-            <h4 class="alert-heading fw-bold">No Active Reservations!</h4>
-            <p class="mb-0">There are no client bookings present in the system database right now.</p>
+            <h4 class="alert-heading fw-bold">No Event Bookings Found!</h4>
+            <p class="mb-3 text-secondary">You haven't scheduled or reserved any event venues on the platform yet.</p>
+            @if (User.IsInRole("Admin") || User.IsInRole("Event Host"))
+            {
+                <a class="btn btn-primary rounded-pill px-4" asp-action="Create">Make Your First Booking</a>
+            }
         </div>
     }
     else
@@ -31,12 +43,13 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="table-dark">
                         <tr>
-                            <th class="ps-4">Booking ID</th>
-                            <th>Venue</th>
-                            <th>Event Date / Slot</th>
-                            <th>Guests</th>
-                            <th>Total Price</th>
-                            <th>Status</th>
+                            <th class="ps-4">Reservation ID</th>
+                            <th>Venue Target</th>
+                            <th>Date & Execution Window</th>
+                            <th>Est. Guests</th>
+                            <th>Total Cost</th>
+                            <th>Workflow Status</th>
+                            <th class="text-end pe-4">Actions Matrix</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -52,7 +65,41 @@
                                 <td>@booking.EstimatedGuests</td>
                                 <td class="fw-bold text-success">₹@booking.TotalPrice.ToString("N2")</td>
                                 <td>
-                                    <span class="badge rounded-pill px-3 py-2 bg-warning text-dark">@booking.Status</span>
+                                    @if (booking.Status == BookingStatus.Pending)
+                                    {
+                                        <span class="badge rounded-pill px-3 py-2 bg-warning text-dark">Pending Approval</span>
+                                    }
+                                    else if (booking.Status == BookingStatus.Confirmed)
+                                    {
+                                        <span class="badge rounded-pill px-3 py-2 bg-success">Confirmed</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge rounded-pill px-3 py-2 bg-danger">Cancelled</span>
+                                    }
+                                </td>
+                                <td class="pe-4 text-end">
+                                    @if (booking.Status == BookingStatus.Pending && (User.IsInRole("Admin") || booking.Venue?.OwnerId == currentUserId))
+                                    {
+                                        <div class="d-inline-flex gap-2">
+                                            <form asp-action="Approve" asp-route-id="@booking.Id" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm">Approve</button>
+                                            </form>
+                                            <form asp-action="Cancel" asp-route-id="@booking.Id" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">Reject</button>
+                                            </form>
+                                        </div>
+                                    }
+                                    else if (booking.Status == BookingStatus.Pending && booking.EventHostId == currentUserId)
+                                    {
+                                        <form asp-action="Cancel" asp-route-id="@booking.Id" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-danger rounded-pill px-3 shadow-sm">Withdraw Request</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">-</span>
+                                    }
                                 </td>
                             </tr>
                         }

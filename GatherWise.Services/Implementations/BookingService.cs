@@ -88,12 +88,17 @@ namespace GatherWise.Services.Implementations
 
         public async Task CancelBookingAsync(int id)
         {
-            var booking = await _context.Bookings.Include(b => b.Slot).FirstOrDefaultAsync(b => b.Id == id);
+            // Make sure to include the underlying Slot navigation entity!
+            var booking = await _context.Bookings
+                .Include(b => b.Slot)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
             if (booking != null)
             {
+                // 1. Change the business status of the request
                 booking.Status = BookingStatus.Cancelled;
 
-                // Release the slot back to public availability
+                // 2. RELEASE THE SLOT! Reset IsBooked back to false so it can be re-booked
                 if (booking.Slot != null)
                 {
                     booking.Slot.IsBooked = false;
@@ -101,6 +106,24 @@ namespace GatherWise.Services.Implementations
 
                 await _context.SaveChangesAsync();
             }
+        }
+        public async Task UpdateBookingStatusAsync(int id, BookingStatus status)
+        {
+            var booking = await _context.Bookings.FindAsync(id);
+            if (booking != null)
+            {
+                booking.Status = status;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<IEnumerable<Booking>> GetBookingsByOwnerIdAsync(string ownerId)
+        {
+            return await _context.Bookings
+            .Include(b => b.Venue)
+            .Include(b => b.Slot)
+            .Where(b => b.Venue.OwnerId == ownerId)
+            .ToListAsync();
         }
     }
 }

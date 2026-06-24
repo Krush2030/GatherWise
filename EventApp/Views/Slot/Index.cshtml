@@ -1,7 +1,9 @@
 ﻿@model IEnumerable<GatherWise.Domain.Entities.Slot>
+@using System.Security.Claims
 
 @{
     ViewData["Title"] = "Manage Time Slots";
+    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 }
 
 <div class="container mt-4">
@@ -10,9 +12,12 @@
             <h1 class="display-5 fw-bold text-dark">Venue Availability Slots</h1>
             <p class="text-muted">Allocate and schedule operational timelines across your registered properties.</p>
         </div>
-        <div>
-            <a class="btn btn-primary btn-lg shadow-sm" asp-action="Create">+ Add New Time Slot</a>
-        </div>
+        @if (User.IsInRole("Admin") || User.IsInRole("Venue Owner"))
+        {
+            <div>
+                <a class="btn btn-primary btn-lg shadow-sm" asp-action="Create">+ Add New Time Slot</a>
+            </div>
+        }
     </div>
 
     <hr class="mb-4" />
@@ -58,7 +63,14 @@
                                     }
                                 </td>
                                 <td class="text-end pe-4">
-                                    <a asp-action="Delete" asp-route-id="@slot.Id" class="btn btn-sm btn-outline-danger rounded-pill px-3">Remove</a>
+                                    @if (User.IsInRole("Admin") || slot.Venue?.OwnerId == currentUserId)
+                                    {
+                                        <a asp-action="Delete" asp-route-id="@slot.Id" class="btn btn-sm btn-outline-danger rounded-pill px-3">Remove</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small italic">Read-Only</span>
+                                    }
                                 </td>
                             </tr>
                         }

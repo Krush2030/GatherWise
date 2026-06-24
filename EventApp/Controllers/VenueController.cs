@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
-using GatherWise.Services.Interfaces;
+﻿using System.Threading.Tasks;
+using System.Security.Claims;
 using GatherWise.Domain.Entities;
+using GatherWise.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace GatherWise.Web.Controllers
 {
+    [Authorize]
     public class VenueController : Controller
     {
         private readonly IVenueService _venueService;
@@ -33,16 +36,22 @@ namespace GatherWise.Web.Controllers
         }
 
         // GET: /Venue/Create
+        [Authorize(Roles = "Admin,Venue Owner")]
         public IActionResult Create()
         {
             return View();
         }
 
         // POST: /Venue/Create
+        [Authorize(Roles = "Admin,Venue Owner")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Name,Location,Capacity,PricePerSlot,Description")] Venue venue)
         {
+            // Bind the logged-in owner's unique ID automatically
+            venue.OwnerId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+            ModelState.Remove("OwnerId");
+
             if (ModelState.IsValid)
             {
                 await _venueService.CreateVenueAsync(venue);
@@ -52,6 +61,7 @@ namespace GatherWise.Web.Controllers
         }
 
         // GET: /Venue/Edit/5
+        [Authorize(Roles = "Admin,Venue Owner")]
         public async Task<IActionResult> Edit(int id)
         {
             var venue = await _venueService.GetVenueByIdAsync(id);
@@ -59,17 +69,33 @@ namespace GatherWise.Web.Controllers
             {
                 return NotFound();
             }
+
+            // Check Ownership
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!User.IsInRole("Admin") && venue.OwnerId != currentUserId)
+            {
+                return Forbid(); // Blocks other Venue Owners completely
+            }
+
             return View(venue);
         }
 
         // POST: /Venue/Edit/5
+        [Authorize(Roles = "Admin,Venue Owner")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Location,Capacity,PricePerSlot,Description,IsAvailable")] Venue venue)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Location,Capacity,PricePerSlot,Description,IsAvailable,OwnerId")] Venue venue)
         {
             if (id != venue.Id)
             {
                 return NotFound();
+            }
+
+            // Check Ownership
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!User.IsInRole("Admin") && venue.OwnerId != currentUserId)
+            {
+                return Forbid();
             }
 
             if (ModelState.IsValid)
@@ -81,6 +107,7 @@ namespace GatherWise.Web.Controllers
         }
 
         // GET: /Venue/Delete/5
+        [Authorize(Roles = "Admin,Venue Owner")]
         public async Task<IActionResult> Delete(int id)
         {
             var venue = await _venueService.GetVenueByIdAsync(id);
@@ -88,14 +115,36 @@ namespace GatherWise.Web.Controllers
             {
                 return NotFound();
             }
+
+            // Check Ownership
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!User.IsInRole("Admin") && venue.OwnerId != currentUserId)
+            {
+                return Forbid();
+            }
+
             return View(venue);
         }
 
         // POST: /Venue/Delete/5
+        [Authorize(Roles = "Admin,Venue Owner")]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            var venue = await _venueService.GetVenueByIdAsync(id);
+            if (venue == null)
+            {
+                return NotFound();
+            }
+
+            // Check Ownership
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!User.IsInRole("Admin") && venue.OwnerId != currentUserId)
+            {
+                return Forbid();
+            }
+
             await _venueService.DeleteVenueAsync(id);
             return RedirectToAction(nameof(Index));
         }

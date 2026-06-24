@@ -2,11 +2,14 @@
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Threading.Tasks;
+using System.Security.Claims;
 using GatherWise.Services.Interfaces;
 using GatherWise.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GatherWise.Web.Controllers
 {
+    [Authorize]
     public class BookingController : Controller
     {
         private readonly IBookingService _bookingService;
@@ -23,11 +26,30 @@ namespace GatherWise.Web.Controllers
         // GET: /Booking
         public async Task<IActionResult> Index()
         {
-            var bookings = await _bookingService.GetAllBookingsAsync();
-            return View(bookings);
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+
+            // 1. If Event Host: They see only the reservations they personally created
+            if (User.IsInRole("Event Host"))
+            {
+                var hostBookings = await _bookingService.GetBookingsByHostIdAsync(currentUserId);
+                return View(hostBookings);
+            }
+
+            // 2. If Venue Owner: They see only incoming requests targeted at their owned properties
+            if (User.IsInRole("Venue Owner"))
+            {
+                // Ensure your IBookingService contains this filter or use your context to load records:
+                var ownerBookings = await _bookingService.GetBookingsByOwnerIdAsync(currentUserId);
+                return View(ownerBookings);
+            }
+
+            // 3. Admins or Platform Coordinators continue to see all systemic rows
+            var allBookings = await _bookingService.GetAllBookingsAsync();
+            return View(allBookings);
         }
 
         // GET: /Booking/Create
+        [Authorize(Roles = "Admin,Event Host")]
         public async Task<IActionResult> Create()
         {
             var venues = await _venueService.GetAllVenuesAsync();
@@ -38,10 +60,14 @@ namespace GatherWise.Web.Controllers
         // POST: /Booking/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Event Host")]
         public async Task<IActionResult> Create([Bind("VenueId,SlotId,EstimatedGuests,TotalPrice")] Booking booking)
         {
-            // For now, since Identity isn't wired up yet, we'll assign a mock string Host ID
-            booking.EventHostId = "MOCK_USER_123";
+            booking.EventHostId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+
+            ModelState.Remove("EventHostId");
+            ModelState.Remove("Status");
+            ModelState.Remove("CreatedAt");
 
             if (ModelState.IsValid)
             {
@@ -56,18 +82,16 @@ namespace GatherWise.Web.Controllers
                 }
             }
 
-            // If validation fails, rebuild the venue dropdown collection
             var venues = await _venueService.GetAllVenuesAsync();
             ViewBag.VenueId = new SelectList(venues, "Id", "Name", booking.VenueId);
             return View(booking);
         }
 
-        // AJAX Helper API Endpoint: /Booking/GetAvailableSlots?venueId=5
+        // GET: /Booking/GetAvailableSlots
         [HttpGet]
         public async Task<JsonResult> GetAvailableSlots(int venueId)
         {
             var allSlots = await _slotService.GetSlotsByVenueIdAsync(venueId);
-            // Filter out already booked slots dynamically
             var availableSlots = new System.Collections.Generic.List<object>();
 
             foreach (var s in allSlots)
@@ -82,6 +106,51 @@ namespace GatherWise.Web.Controllers
                 }
             }
             return Json(availableSlots);
+        }
+
+        // POST: /Booking/Approve/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Venue Owner")]
+        public async Task<IActionResult> Approve(int id)
+        {
+            var booking = await _bookingService.GetBookingByIdAsync(id);
+            if (booking == null)
+            {
+                return NotFound();
+            }
+
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!User.IsInRole("Admin") && booking.Venue?.OwnerId != currentUserId)
+            {
+                return Forbid();
+            }
+
+            await _bookingService.UpdateBookingStatusAsync(id, GatherWise.Domain.Enums.BookingStatus.Confirmed);
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: /Booking/Cancel/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Venue Owner,Event Host")]
+        public async Task<IActionResult> Cancel(int id)
+        {
+            var booking = await _bookingService.GetBookingByIdAsync(id);
+            if (booking == null)
+            {
+                return NotFound();
+            }
+
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (!User.IsInRole("Admin") && booking.EventHostId != currentUserId && booking.Venue?.OwnerId != currentUserId)
+            {
+                return Forbid();
+            }
+
+            await _bookingService.CancelBookingAsync(id);
+            return RedirectToAction(nameof(Index));
         }
     }
 }

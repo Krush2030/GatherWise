@@ -22,12 +22,15 @@ namespace GatherWise.Domain.Entities
 
         [Required(ErrorMessage = "Price per slot is required")]
         [Range(0.00, 1000000.00, ErrorMessage = "Invalid price amount")]
-        [Column(TypeName = "decimal(18, 2)")] // Preferred precision over 10,2 for large event bookings
+        [Column(TypeName = "decimal(18, 2)")]
         public decimal PricePerSlot { get; set; }
 
         [StringLength(1000, ErrorMessage = "Description cannot exceed 1000 characters")]
         public string Description { get; set; } = string.Empty;
 
         public bool IsAvailable { get; set; } = true;
+
+        [Required]
+        public string OwnerId { get; set; } = string.Empty;
     }
 }
