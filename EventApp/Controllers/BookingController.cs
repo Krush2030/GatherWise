@@ -63,11 +63,20 @@ namespace GatherWise.Web.Controllers
         [Authorize(Roles = "Admin,Event Host")]
         public async Task<IActionResult> Create([Bind("VenueId,SlotId,EstimatedGuests,TotalPrice")] Booking booking)
         {
+            // Dynamically grab the real database ID of the currently logged-in user
             booking.EventHostId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
 
+            // Remove internal tracking fields from ModelState validation rules
             ModelState.Remove("EventHostId");
             ModelState.Remove("Status");
             ModelState.Remove("CreatedAt");
+
+            // SERVER-SIDE GUARD: Double check the database status directly before allowing creation logic
+            var targetSlot = await _slotService.GetSlotByIdAsync(booking.SlotId);
+            if (targetSlot == null || targetSlot.IsBooked)
+            {
+                ModelState.AddModelError("SlotId", "This operational slot has already been locked or confirmed by another user.");
+            }
 
             if (ModelState.IsValid)
             {
@@ -82,6 +91,7 @@ namespace GatherWise.Web.Controllers
                 }
             }
 
+            // If validation fails, rebuild the venue dropdown collection safely
             var venues = await _venueService.GetAllVenuesAsync();
             ViewBag.VenueId = new SelectList(venues, "Id", "Name", booking.VenueId);
             return View(booking);
@@ -91,11 +101,13 @@ namespace GatherWise.Web.Controllers
         [HttpGet]
         public async Task<JsonResult> GetAvailableSlots(int venueId)
         {
+            // Fetch slots directly from the DB context bypassing local cached tracking arrays
             var allSlots = await _slotService.GetSlotsByVenueIdAsync(venueId);
             var availableSlots = new System.Collections.Generic.List<object>();
 
             foreach (var s in allSlots)
             {
+                // Now that Step 1 forces IsBooked to save as true, this condition will correctly filter it out!
                 if (!s.IsBooked)
                 {
                     availableSlots.Add(new

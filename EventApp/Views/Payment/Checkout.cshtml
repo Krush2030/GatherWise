@@ -1,0 +1,104 @@
+﻿@model GatherWise.Domain.Entities.Payment
+
+@{
+    ViewData["Title"] = "Simulated Checkout Gateway";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <!-- Left Column: Checkout Form Mockup -->
+        <div class="col-md-7 mb-4">
+            <div class="card shadow border-0 rounded-3">
+                <div class="card-header bg-primary text-white p-4 rounded-top">
+                    <h4 class="mb-0 fw-bold"><i class="bi bi-shield-lock me-2"></i>Secure Payment Gateway</h4>
+                    <p class="text-white-50 mb-0 small">Simulate credit card transaction runs safely within your development sandbox environment.</p>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Checkout" method="post">
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Select Payment Method</label>
+                            <select name="paymentMethod" class="form-select" required>
+                                <option value="CreditCard">💳 Credit / Debit Card</option>
+                                <option value="UPI">📱 UPI Transaction</option>
+                                <option value="NetBanking">🌐 Internet Banking</option>
+                            </select>
+                        </div>
+
+                        <!-- Mock Card Details -->
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Cardholder Name</label>
+                            <input type="text" class="form-control" placeholder="John Doe" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Card Number</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-credit-card-2-front"></i></span>
+                                <input type="text" class="form-control" placeholder="4111 2222 3333 4444" maxlength="19" required />
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label class="form-label small fw-semibold text-muted">Expiration Date</label>
+                                <input type="text" class="form-control" placeholder="MM/YY" maxlength="5" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold text-muted">CVV Security Code</label>
+                                <input type="password" class="form-control" placeholder="***" maxlength="3" required />
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-end pt-3 border-top">
+                            <a asp-action="Index" class="btn btn-outline-secondary px-4 rounded-pill">Back to Invoices</a>
+                            <button type="submit" class="btn btn-primary px-4 rounded-pill shadow-sm fw-bold">
+                                Authorize Payment (₹@Model.Amount.ToString("N2"))
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Booking Context Summary Summary Sidebar -->
+        <div class="col-md-5">
+            <div class="card shadow-sm border-0 rounded-3 bg-light p-4">
+                <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Invoice Summary</h5>
+                
+                <div class="mb-3">
+                    <span class="text-muted small d-block">Target Property</span>
+                    <strong class="fs-5 text-primary">@Model.Booking?.Venue?.Name</strong>
+                </div>
+
+                <div class="mb-3">
+                    <span class="text-muted small d-block">Execution Window Timeline</span>
+                    <strong class="text-dark"><i class="bi bi-calendar3 me-1"></i> @Model.Booking?.Slot?.Date.ToString("dd-MMM-yyyy")</strong>
+                    <div class="text-muted small ps-4">
+                        @Model.Booking?.Slot?.StartTime.ToString(@"hh\:mm") - @Model.Booking?.Slot?.EndTime.ToString(@"hh\:mm")
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <span class="text-muted small d-block">Estimated Attendance</span>
+                    <strong class="text-dark"><i class="bi bi-people me-1"></i> @Model.Booking?.EstimatedGuests Guests</strong>
+                </div>
+
+                <div class="p-3 bg-white rounded border d-flex justify-content-between align-items-center mt-4 shadow-sm">
+                    <div>
+                        <span class="fw-bold text-secondary small d-block">Total Billed Due</span>
+                        <span class="text-muted x-small">Inclusive of all platform processing fees</span>
+                    </div>
+                    <span class="fs-4 fw-extrabold text-success">₹@Model.Amount.ToString("N2")</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

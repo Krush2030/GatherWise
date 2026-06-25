@@ -32,5 +32,9 @@ namespace GatherWise.Domain.Entities
 
         [Required]
         public string OwnerId { get; set; } = string.Empty;
+
+        // Foreign Key Mapping to identity user model
+        [ForeignKey("OwnerId")]
+        public ApplicationUser? Owner { get; set; }
     }
 }

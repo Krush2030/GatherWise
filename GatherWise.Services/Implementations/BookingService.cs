@@ -109,10 +109,22 @@ namespace GatherWise.Services.Implementations
         }
         public async Task UpdateBookingStatusAsync(int id, BookingStatus status)
         {
-            var booking = await _context.Bookings.FindAsync(id);
+            // Load with Slot inclusion
+            var booking = await _context.Bookings
+                .Include(b => b.Slot)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
             if (booking != null)
             {
                 booking.Status = status;
+
+                // If it gets confirmed, explicitly fetch and lock down the slot row itself
+                if (status == BookingStatus.Confirmed && booking.Slot != null)
+                {
+                    booking.Slot.IsBooked = true;
+                    _context.Slots.Update(booking.Slot); // Force EF Core to mark the Slot table row as dirty/updated
+                }
+
                 await _context.SaveChangesAsync();
             }
         }

@@ -11,7 +11,11 @@ namespace GatherWise.Domain.Entities
         public int Id { get; set; }
 
         [Required(ErrorMessage = "Customer identification is required")]
-        public string EventHostId { get; set; } = string.Empty; // Will link to ASP.NET Core Identity User ID string
+        public string EventHostId { get; set; } = string.Empty;
+
+        // Foreign Key Mapping to identity user model
+        [ForeignKey("EventHostId")]
+        public ApplicationUser? EventHost { get; set; }
 
         [Required(ErrorMessage = "Venue selection is required")]
         [ForeignKey("Venue")]
