@@ -1,0 +1,208 @@
+﻿@model GatherWise.Domain.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Platform Execution Dashboard";
+}
+
+<div class="container my-5">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-3 border-bottom">
+        <div>
+            <h2 class="fw-bold text-dark mb-1"><i class="bi bi-speedometer2 me-2 text-success"></i>Systemic Overview Workspace</h2>
+            <p class="text-muted small mb-0">Welcome back! Accessing secure workspace indicators as: <strong class="text-success text-uppercase">@Model.ActiveUserRole</strong></p>
+        </div>
+        <div>
+            <span class="badge bg-success bg-opacity-10 text-success p-2 px-3 rounded-pill border border-success border-opacity-20 fs-6">
+                <i class="bi bi-shield-check me-1 animate-pulse"></i> Live Analytics Matrix
+            </span>
+        </div>
+    </div>
+
+    @if (Model.ActiveUserRole == "Event Host")
+    {
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm border-0 bg-success bg-opacity-10 text-success p-4 rounded-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-uppercase small fw-bold tracking-wider d-block mb-1 text-success-emphasis">Total Financial Outlay</span>
+                            <h2 class="fw-bold mb-0">₹@Model.TotalSpent.ToString("N2")</h2>
+                        </div>
+                        <div class="fs-1 text-success opacity-50"><i class="bi bi-wallet2"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm border-0 bg-primary bg-opacity-10 text-primary p-4 rounded-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-uppercase small fw-bold tracking-wider d-block mb-1 text-primary-emphasis">Confirmed Bookings</span>
+                            <h2 class="fw-bold mb-0">@Model.UpcomingReservations.Count</h2>
+                        </div>
+                        <div class="fs-1 text-primary opacity-50"><i class="bi bi-calendar-check"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 rounded-3 mb-5">
+            <div class="card-header bg-white p-4 border-bottom">
+                <h5 class="fw-bold text-dark mb-0"><i class="bi bi-calendar3 me-2 text-primary"></i>Your Upcoming Booking Reservations</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light text-secondary small text-uppercase">
+                            <tr>
+                                <th class="ps-4">Booking Ref</th>
+                                <th>Venue Details</th>
+                                <th>Execution Window</th>
+                                <th class="text-end pe-4">Total Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.UpcomingReservations.Any())
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-5">
+                                        <i class="bi bi-calendar-x fs-2 d-block mb-2 text-secondary"></i>
+                                        No active upcoming reservations found.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var booking in Model.UpcomingReservations)
+                                {
+                                    <tr>
+                                        <td class="ps-4 font-monospace text-primary fw-bold">#GW-@booking.Id</td>
+                                        <td>
+                                            <strong class="text-dark d-block">@booking.Venue?.Name</strong>
+                                            <span class="text-muted small"><i class="bi bi-geo-alt me-1"></i>@booking.Venue?.Location</span>
+                                        </td>
+                                        <td>
+                                            <span class="d-block text-dark fw-semibold">@booking.Slot?.Date.ToString("dd-MMM-yyyy")</span>
+                                            <span class="text-muted small">@booking.Slot?.StartTime.ToString(@"hh\:mm") - @booking.Slot?.EndTime.ToString(@"hh\:mm")</span>
+                                        </td>
+                                        <td class="text-end pe-4 fw-bold text-success">₹@booking.TotalPrice.ToString("N2")</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else if (Model.ActiveUserRole == "Venue Owner")
+    {
+        <div class="row g-4 mb-5">
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm border-0 bg-primary bg-opacity-10 text-primary p-4 rounded-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-uppercase small fw-bold tracking-wider d-block mb-1 text-primary-emphasis">Total Gross Earnings</span>
+                            <h2 class="fw-bold mb-0">₹@Model.TotalEarnings.ToString("N2")</h2>
+                        </div>
+                        <div class="fs-1 text-primary opacity-50"><i class="bi bi-cash-stack"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm border-0 bg-info bg-opacity-10 text-info p-4 rounded-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-uppercase small fw-bold tracking-wider d-block mb-1 text-info-emphasis">Venue Occupancy Rate</span>
+                            <h2 class="fw-bold mb-1">@Model.VenueOccupancyRate.ToString("F1")%</h2>
+                            <div class="progress mt-2" style="height: 6px; width: 150px;">
+                                <div class="progress-bar bg-info" role="progressbar" style="width: @Model.VenueOccupancyRate%" aria-valuenow="@Model.VenueOccupancyRate" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                        <div class="fs-1 text-info opacity-50"><i class="bi bi-pie-chart"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm border-0 bg-warning bg-opacity-10 text-warning p-4 rounded-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-uppercase small fw-bold tracking-wider d-block mb-1 text-warning-emphasis">Popular Time Slots</span>
+                            <ul class="list-unstyled mb-0 small text-warning-emphasis fw-semibold">
+                                @if (!Model.PopularTimeSlots.Any())
+                                {
+                                    <li>Data compiling...</li>
+                                }
+                                else
+                                {
+                                    @foreach (var slot in Model.PopularTimeSlots)
+                                    {
+                                        <li><i class="bi bi-star-fill me-1 small"></i> @slot</li>
+                                    }
+                                }
+                            </ul>
+                        </div>
+                        <div class="fs-1 text-warning opacity-50"><i class="bi bi-graph-up-arrow"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 rounded-3">
+            <div class="card-header bg-white p-4 border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold text-dark mb-0"><i class="bi bi-inboxes me-2 text-warning"></i>Incoming Requests Ledger</h5>
+                <span class="badge bg-warning text-dark px-3 rounded-pill">Pending Approval: @Model.IncomingRequests.Count</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light text-secondary small text-uppercase">
+                            <tr>
+                                <th class="ps-4">Registry ID</th>
+                                <th>Target Property</th>
+                                <th>Schedule Window</th>
+                                <th>Metrics</th>
+                                <th class="text-end pe-4">Systemic Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.IncomingRequests.Any())
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-5">
+                                        <i class="bi bi-check-circle fs-2 d-block mb-2 text-success"></i>
+                                        All set! No pending operational confirmation lines remain.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var request in Model.IncomingRequests)
+                                {
+                                    <tr>
+                                        <td class="ps-4 font-monospace text-secondary fw-bold">#GW-@request.Id</td>
+                                        <td><strong class="text-dark">@request.Venue?.Name</strong></td>
+                                        <td>
+                                            <span class="d-block text-dark fw-semibold">@request.Slot?.Date.ToString("dd-MMM-yyyy")</span>
+                                            <span class="text-muted small">@request.Slot?.StartTime.ToString(@"hh\:mm") - @request.Slot?.EndTime.ToString(@"hh\:mm")</span>
+                                        </td>
+                                        <td><span class="text-muted small"><i class="bi bi-people me-1"></i>@request.EstimatedGuests Max Cap</span></td>
+                                        <td class="text-end pe-4">
+                                            <div class="d-flex gap-2 justify-content-end">
+                                                <form asp-controller="Booking" asp-action="Approve" asp-route-id="@request.Id" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-success rounded-pill px-3"><i class="bi bi-check2 me-1"></i>Approve</button>
+                                                </form>
+                                                <form asp-controller="Booking" asp-action="Cancel" asp-route-id="@request.Id" method="post">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3"><i class="bi bi-x-lg me-1"></i>Decline</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+</div>

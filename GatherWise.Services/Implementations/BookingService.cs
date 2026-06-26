@@ -86,26 +86,36 @@ namespace GatherWise.Services.Implementations
             }
         }
 
-        public async Task CancelBookingAsync(int id)
+        public async Task<bool> CancelBookingAsync(int bookingId)
         {
-            // Make sure to include the underlying Slot navigation entity!
             var booking = await _context.Bookings
                 .Include(b => b.Slot)
-                .FirstOrDefaultAsync(b => b.Id == id);
+                .FirstOrDefaultAsync(b => b.Id == bookingId);
 
-            if (booking != null)
+            if (booking == null || booking.Status == BookingStatus.Cancelled)
+                return false;
+
+            // 1. Change Booking Status
+            booking.Status = BookingStatus.Cancelled;
+
+            // 2. Free up the slot timeline execution window
+            if (booking.Slot != null)
             {
-                // 1. Change the business status of the request
-                booking.Status = BookingStatus.Cancelled;
-
-                // 2. RELEASE THE SLOT! Reset IsBooked back to false so it can be re-booked
-                if (booking.Slot != null)
-                {
-                    booking.Slot.IsBooked = false;
-                }
-
-                await _context.SaveChangesAsync();
+                booking.Slot.IsBooked = false;
             }
+
+            // 3. Handle the attached financial ledger state
+            var payment = await _context.Payments
+                .FirstOrDefaultAsync(p => p.BookingId == bookingId);
+
+            if (payment != null)
+            {
+                // Adjust this mapping based on your GatherWise.Domain.Enums.PaymentStatus values
+                payment.Status = PaymentStatus.Refunded;
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
         }
         public async Task UpdateBookingStatusAsync(int id, BookingStatus status)
         {

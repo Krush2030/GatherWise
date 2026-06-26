@@ -6,27 +6,32 @@
     var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 }
 
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="container my-5">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-3 border-bottom">
         <div>
-            <h1 class="display-5 fw-bold text-primary">Discover Spectacular Venues</h1>
-            <p class="text-muted">Find and book the perfect setting for your next unforgettable event.</p>
+            <h1 class="fw-bold text-dark mb-1">
+                <i class="bi bi-search text-success me-2"></i>Discover Spectacular Venues
+            </h1>
+            <p class="text-muted mb-0">Find and book the perfect setting for your next unforgettable event.</p>
         </div>
         @if (User.IsInRole("Admin") || User.IsInRole("Venue Owner"))
         {
             <div>
-                <a class="btn btn-success btn-lg shadow-sm" asp-action="Create">+ List a New Venue</a>
+                <a class="btn btn-success rounded-pill px-4 shadow-sm" asp-action="Create">
+                    <i class="bi bi-plus-lg me-1"></i> List a New Venue
+                </a>
             </div>
         }
     </div>
 
-    <hr class="mb-4" />
-
     @if (!Model.Any())
     {
-        <div class="alert alert-info text-center shadow-sm p-5" role="alert">
-            <h4 class="alert-heading fw-bold">No Venues Found!</h4>
-            <p class="mb-0">Our database is currently empty. Try running a seed script or add your very first venue to get started.</p>
+        <div class="card shadow-sm border-0 rounded-3 text-center p-5 bg-light">
+            <div class="card-body">
+                <i class="bi bi-building-exclamation display-3 text-muted mb-3 d-block"></i>
+                <h4 class="fw-bold text-dark">No Venues Available</h4>
+                <p class="text-muted max-w-md mx-auto">Our catalog is currently clear. Check back later or add your first property listing to get started.</p>
+            </div>
         </div>
     }
     else
@@ -34,38 +39,85 @@
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             @foreach (var venue in Model)
             {
+                var isOwnVenue = venue.OwnerId == currentUserId;
+
                 <div class="col">
-                    <div class="card h-100 shadow-sm border-0 rounded-3 hover-shadow transition-all">
-                        <div class="bg-light d-flex align-items-center justify-content-center border-bottom rounded-top" style="height: 180px;">
-                            <i class="bi bi-building text-secondary display-1"></i>
+                    <div class="card h-100 shadow-sm border-0 rounded-3 position-relative overflow-hidden border border-translucent">
+                        
+                        <div class="position-absolute top-0 start-0 m-3 d-flex flex-column gap-1" style="z-index: 2;">
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <span class="badge bg-dark text-white px-2.5 py-1.5 rounded-pill small border border-secondary">
+                                    <i class="bi bi-shield-lock me-1"></i> Admin View
+                                </span>
+                            }
+                            @if (isOwnVenue)
+                            {
+                                <span class="badge bg-primary text-white px-2.5 py-1.5 rounded-pill small">
+                                    <i class="bi bi-person-check me-1"></i> Your Property
+                                </span>
+                            }
                         </div>
-                        <div class="card-body">
-                            <h5 class="card-title fw-bold text-dark">@venue.Name</h5>
-                            <p class="card-text text-muted mb-2">
-                                <i class="bi bi-geo-alt-fill text-danger"></i> @venue.Location
+
+                        <div class="bg-light d-flex align-items-center justify-content-center border-bottom overflow-hidden position-relative" style="height: 170px;">
+                            @if (venue.Images != null && venue.Images.Any())
+                            {
+                                <img src="@venue.Images.First().ImagePath" class="w-100 h-100 object-fit-cover" alt="@venue.Name thumbnail cover" />
+                            }
+                            else
+                            {
+                                <div class="w-100 h-100 bg-success bg-opacity-10 d-flex align-items-center justify-content-center">
+                                    <i class="bi bi-building text-success opacity-75 display-2"></i>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="card-body p-4">
+                            <h5 class="card-title fw-bold text-dark text-truncate mb-1">@venue.Name</h5>
+                            <p class="card-text text-muted small mb-3 text-truncate">
+                                <i class="bi bi-geo-alt text-danger me-1"></i> @venue.Location
                             </p>
-                            <p class="card-text text-truncate small text-secondary">
+                            <p class="card-text text-secondary small text-line-clamp-2 mb-0" style="min-height: 40px;">
                                 @venue.Description
                             </p>
                             
-                            <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                            <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
                                 <div>
-                                    <span class="text-muted small d-block">Capacity</span>
+                                    <span class="text-muted small text-uppercase tracking-wider d-block" style="font-size: 0.75rem;">Capacity</span>
                                     <strong class="text-dark">@venue.Capacity Guests</strong>
                                 </div>
                                 <div class="text-end">
-                                    <span class="text-muted small d-block">Price / Slot</span>
+                                    <span class="text-muted small text-uppercase tracking-wider d-block" style="font-size: 0.75rem;">Price / Slot</span>
                                     <strong class="text-success fs-5">₹@venue.PricePerSlot.ToString("N2")</strong>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-footer bg-transparent border-0 p-3 pt-0 d-flex gap-2">
-                            <a asp-action="Details" asp-route-id="@venue.Id" class="btn btn-outline-primary w-100 rounded-pill">View Details</a>
-                            
-                            @if (User.IsInRole("Admin") || venue.OwnerId == currentUserId)
+
+                        <div class="card-footer bg-white border-0 p-4 pt-0 d-flex gap-2">
+                            @if (User.IsInRole("Event Host") && !isOwnVenue)
                             {
-                                <a asp-action="Edit" asp-route-id="@venue.Id" class="btn btn-outline-warning rounded-pill px-3" title="Edit"><i class="bi bi-pencil-square"></i></a>
-                                <a asp-action="Delete" asp-route-id="@venue.Id" class="btn btn-outline-danger rounded-pill px-3" title="Delete"><i class="bi bi-trash"></i></a>
+                                <a asp-controller="Booking" asp-action="Create" asp-route-venueId="@venue.Id" class="btn btn-success w-100 rounded-pill fw-semibold shadow-sm">
+                                    <i class="bi bi-calendar-plus me-1"></i> Book Slot
+                                </a>
+                                <a asp-action="Details" asp-route-id="@venue.Id" class="btn btn-outline-secondary rounded-circle px-3" title="Details">
+                                    <i class="bi bi-info-circle"></i>
+                                </a>
+                            }
+                            else
+                            {
+                                <a asp-action="Details" asp-route-id="@venue.Id" class="btn btn-outline-success w-100 rounded-pill fw-semibold">
+                                    View Details
+                                </a>
+                            }
+                            
+                            @if (User.IsInRole("Admin") || isOwnVenue)
+                            {
+                                <a asp-action="Edit" asp-route-id="@venue.Id" class="btn btn-outline-warning rounded-pill px-3" title="Edit Properties">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@venue.Id" class="btn btn-outline-danger rounded-pill px-3" title="Remove Listing">
+                                    <i class="bi bi-trash"></i>
+                                </a>
                             }
                         </div>
                     </div>

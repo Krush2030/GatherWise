@@ -16,6 +16,7 @@ namespace GatherWise.DataAccess.Data
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Vendor> Vendors { get; set; }
+        public DbSet<VenueImage> VenueImages { get; set; } // <-- ADD THIS LINE
         public DbSet<VendorAssignment> VendorAssignments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -83,6 +84,12 @@ namespace GatherWise.DataAccess.Data
             modelBuilder.Entity<VendorAssignment>()
                 .Property(va => va.FinalAgreedPrice)
                 .HasPrecision(18, 2);
+
+            modelBuilder.Entity<VenueImage>()
+                .HasOne(vi => vi.Venue)
+                .WithMany(v => v.Images)
+                .HasForeignKey(vi => vi.VenueId)
+                .OnDelete(DeleteBehavior.Cascade); 
         }
     }
 }

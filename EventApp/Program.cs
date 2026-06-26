@@ -25,6 +25,7 @@ namespace EventApp
             builder.Services.AddScoped<ISlotService, SlotService>();
             builder.Services.AddScoped<IBookingService, BookingService>();
             builder.Services.AddScoped<IPaymentService, PaymentService>();
+            builder.Services.AddScoped<IDashboardService, DashboardService>();
 
             builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => {
                 options.Password.RequireDigit = true;

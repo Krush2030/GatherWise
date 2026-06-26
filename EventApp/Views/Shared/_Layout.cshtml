@@ -8,9 +8,10 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - EventApp</title>
+    <title>@ViewData["Title"] - GatherWise</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/EventApp.styles.css" asp-append-version="true" />
 </head>
@@ -18,7 +19,7 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">EventApp</a>
+                <a class="navbar-brand fw-bold text-success" asp-area="" asp-controller="Home" asp-action="Index">GatherWise</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
@@ -28,9 +29,16 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
+                        
+                        @if (SignInManager.IsSignedIn(User))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark fw-bold text-success" asp-area="" asp-controller="Dashboard" asp-action="Index">
+                                    <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                                </a>
+                            </li>
+                        }
+
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Venue" asp-action="Index">Venues</a>
                         </li>
@@ -45,17 +53,18 @@
                                 <i class="bi bi-wallet2 me-1"></i> Payments
                             </a>
                         </li>
-
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                        </li>
                     </ul>
 
                     <ul class="navbar-nav gap-2">
                         @if (SignInManager.IsSignedIn(User))
                         {
-                            // Fetch the user object or display name claim directly
                             var currentUser = await UserManager.GetUserAsync(User);
                             <li class="nav-item d-flex align-items-center me-2">
                                 <span class="navbar-text text-dark fw-semibold">
-                                    <i class="bi bi-person-circle text-primary me-1"></i> Hello, @(currentUser?.FullName ?? User.Identity?.Name)
+                                    <i class="bi bi-person-circle text-success me-1"></i> Hello, @(currentUser?.FullName ?? User.Identity?.Name)
                                 </span>
                             </li>
                             <li class="nav-item">
@@ -67,10 +76,10 @@
                         else
                         {
                             <li class="nav-item">
-                                <a class="btn btn-outline-primary rounded-pill px-3" asp-controller="Account" asp-action="Login">Login</a>
+                                <a class="btn btn-outline-success rounded-pill px-3" asp-controller="Account" asp-action="Login">Login</a>
                             </li>
                             <li class="nav-item">
-                                <a class="btn btn-primary rounded-pill px-3 shadow-sm" asp-controller="Account" asp-action="Register">Register</a>
+                                <a class="btn btn-success rounded-pill px-3 shadow-sm" asp-controller="Account" asp-action="Register">Register</a>
                             </li>
                         }
                     </ul>
@@ -86,7 +95,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2026 - EventApp - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2026 - GatherWise - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

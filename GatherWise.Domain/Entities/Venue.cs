@@ -36,5 +36,7 @@ namespace GatherWise.Domain.Entities
         // Foreign Key Mapping to identity user model
         [ForeignKey("OwnerId")]
         public ApplicationUser? Owner { get; set; }
+
+        public ICollection<VenueImage> Images { get; set; } = new List<VenueImage>();
     }
 }
