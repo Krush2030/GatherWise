@@ -4,48 +4,74 @@
     ViewData["Title"] = "Add Availability Slot";
 }
 
-<div class="container mt-5">
+<div class="container my-5">
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow border-0 rounded-3">
-                <div class="card-header bg-primary text-white p-4 rounded-top">
-                    <h4 class="mb-0 fw-bold"><i class="bi bi-calendar-plus me-2"></i>Schedule Venue Availability</h4>
-                    <p class="text-white-50 mb-0 small">Open up single or custom operational blocks for client event booking.</p>
+        <div class="col-lg-6 col-md-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+                <!-- Premium Header Branding -->
+                <div class="bg-success bg-opacity-10 text-success p-4 border-bottom border-light">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-2 bg-success text-white rounded-3 fs-4 d-inline-flex">
+                            <i class="bi bi-calendar-plus"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-0 fw-bold text-dark">Schedule Venue Availability</h4>
+                            <p class="text-muted mb-0 small">Open up single or custom operational blocks for client event booking.</p>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Form Interface Body -->
                 <div class="card-body p-4">
                     <form asp-action="Create" method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3 small"></div>
 
+                        <!-- Property Dropdown Select -->
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Select Target Property</label>
-                            <select asp-for="VenueId" class="form-select" asp-items="ViewBag.VenueId">
-                                <option value="">-- Choose a Venue --</option>
-                            </select>
-                            <span asp-validation-for="VenueId" class="text-danger small"></span>
+                            <label class="form-label fw-semibold text-dark small">Select Target Property</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-building"></i></span>
+                                <select asp-for="VenueId" class="form-select border-start-0 ps-0" asp-items="ViewBag.VenueId">
+                                    <option value="">-- Choose a Venue --</option>
+                                </select>
+                            </div>
+                            <span asp-validation-for="VenueId" class="text-danger small d-block mt-1"></span>
                         </div>
 
+                        <!-- Calendar Input Parameter -->
                         <div class="mb-3">
-                            <label asp-for="Date" class="form-label fw-semibold">Calendar Date</label>
-                            <input asp-for="Date" type="date" class="form-control" />
-                            <span asp-validation-for="Date" class="text-danger small"></span>
+                            <label asp-for="Date" class="form-label fw-semibold text-dark small">Calendar Date</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-calendar-event"></i></span>
+                                <input asp-for="Date" type="date" class="form-control border-start-0 ps-0" />
+                            </div>
+                            <span asp-validation-for="Date" class="text-danger small d-block mt-1"></span>
                         </div>
 
+                        <!-- Split-Row Operational Times Inputs -->
                         <div class="row g-3 mb-4">
                             <div class="col-6">
-                                <label asp-for="StartTime" class="form-label fw-semibold">Opening Time</label>
-                                <input asp-for="StartTime" type="time" class="form-control" />
-                                <span asp-validation-for="StartTime" class="text-danger small"></span>
+                                <label asp-for="StartTime" class="form-label fw-semibold text-dark small">Opening Time</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-clock"></i></span>
+                                    <input asp-for="StartTime" type="time" class="form-control border-start-0 ps-0" />
+                                </div>
+                                <span asp-validation-for="StartTime" class="text-danger small d-block mt-1"></span>
                             </div>
                             <div class="col-6">
-                                <label asp-for="EndTime" class="form-label fw-semibold">Closing Time</label>
-                                <input asp-for="EndTime" type="time" class="form-control" />
-                                <span asp-validation-for="EndTime" class="text-danger small"></span>
+                                <label asp-for="EndTime" class="form-label fw-semibold text-dark small">Closing Time</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-clock-history"></i></span>
+                                    <input asp-for="EndTime" type="time" class="form-control border-start-0 ps-0" />
+                                </div>
+                                <span asp-validation-for="EndTime" class="text-danger small d-block mt-1"></span>
                             </div>
                         </div>
 
+                        <!-- Action Control Section -->
                         <div class="d-flex gap-2 justify-content-end pt-3 border-top">
                             <a asp-action="Index" class="btn btn-outline-secondary px-4 rounded-pill">Cancel</a>
-                            <button type="submit" class="btn btn-primary px-4 rounded-pill shadow-sm">Open Slot</button>
+                            <button type="submit" class="btn btn-success px-4 rounded-pill shadow-sm fw-semibold">Open Slot</button>
                         </div>
                     </form>
                 </div>

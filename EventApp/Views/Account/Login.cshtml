@@ -3,38 +3,60 @@
     ViewData["Title"] = "Sign In";
 }
 
-<div class="container mt-5">
+<div class="container my-5">
     <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card shadow border-0 rounded-3">
-                <div class="card-header bg-primary text-white p-4 text-center">
-                    <h3 class="fw-bold mb-1">Welcome Back</h3>
-                    <p class="text-white-50 small mb-0">Access your GatherWise management dashboard console</p>
+        <div class="col-lg-5 col-md-7">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+                <!-- Premium Branded Header -->
+                <div class="bg-success bg-opacity-10 text-success p-4 text-center border-bottom border-light">
+                    <div class="p-3 bg-success text-white rounded-circle d-inline-block mb-2 shadow-sm">
+                        <i class="bi bi-shield-check fs-4 d-flex"></i>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-1">Welcome Back</h3>
+                    <p class="text-muted small mb-0">Access your GatherWise management dashboard console</p>
                 </div>
+
+                <!-- Identity Sign-In Form Body -->
                 <div class="card-body p-4">
                     <form asp-action="Login" method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3 fw-bold"></div>
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3 small fw-bold"></div>
 
+                        <!-- Email Address Input -->
                         <div class="mb-3">
-                            <label asp-for="Email" class="form-label fw-semibold">Email Address</label>
-                            <input asp-for="Email" class="form-control" placeholder="name@example.com" />
-                            <span asp-validation-for="Email" class="text-danger small"></span>
+                            <label asp-for="Email" class="form-label fw-semibold text-dark small">Email Address</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
+                                <input asp-for="Email" class="form-control border-start-0 ps-0" placeholder="name@example.com" />
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger small d-block mt-1"></span>
                         </div>
 
+                        <!-- Password Input -->
                         <div class="mb-3">
-                            <label asp-for="Password" class="form-label fw-semibold">Password</label>
-                            <input asp-for="Password" class="form-control" />
-                            <span asp-validation-for="Password" class="text-danger small"></span>
+                            <label asp-for="Password" class="form-label fw-semibold text-dark small">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-key"></i></span>
+                                <input asp-for="Password" type="password" class="form-control border-start-0 ps-0" placeholder="••••••••" />
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger small d-block mt-1"></span>
                         </div>
 
+                        <!-- Persistent Cookies State Option -->
                         <div class="form-check mb-4">
-                            <input class="form-check-input" type="checkbox" asp-for="RememberMe">
-                            <label class="form-check-label text-secondary small" asp-for="RememberMe"></label>
+                            <input class="form-check-input check-success" type="checkbox" asp-for="RememberMe">
+                            <label class="form-check-label text-muted small user-select-none" asp-for="RememberMe">
+                                Keep me signed in on this device
+                            </label>
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-semibold shadow-sm mb-3">Login</button>
-                        <div class="text-center small">
-                            <span class="text-muted">New to the platform?</span> <a asp-action="Register" class="text-decoration-none fw-semibold">Create Account</a>
+                        <!-- Primary Interactive Control Action -->
+                        <button type="submit" class="btn btn-success w-100 rounded-pill py-2.5 fw-semibold shadow-sm mb-3">
+                            Sign In to Portal <i class="bi bi-box-arrow-in-right small ms-1"></i>
+                        </button>
+                        
+                        <div class="text-center pt-2 border-top border-light">
+                            <span class="text-muted small">New to the platform?</span>
+                            <a asp-action="Register" class="text-success text-decoration-none fw-semibold small ms-1">Create Account</a>
                         </div>
                     </form>
                 </div>
@@ -42,3 +64,9 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
