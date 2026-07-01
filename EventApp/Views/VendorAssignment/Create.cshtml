@@ -1,0 +1,85 @@
+﻿@model GatherWise.Web.Models.AssignVendorViewModel
+
+@{
+    ViewData["Title"] = "Assign Service Vendor";
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+                <div class="bg-success bg-opacity-10 text-success p-4 border-bottom border-light">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-2 bg-success text-white rounded-3 fs-4 d-inline-flex">
+                            <i class="bi bi-person-gear"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-0 fw-bold text-dark">Assign Vendor to Booking</h4>
+                            <p class="text-muted mb-0 small">Bind verified caterers, media experts, or entertainment to event timelines.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3 small"></div>
+
+                        <!-- Choose Event Booking -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-dark small">Target Event Reference</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-journal-bookmark"></i></span>
+                                <select asp-for="BookingId" class="form-select border-start-0 ps-0" asp-items="Model.BookingsList">
+                                    <option value="">-- Link to an active Booking ID --</option>
+                                </select>
+                            </div>
+                            <span asp-validation-for="BookingId" class="text-danger small mt-1 d-block"></span>
+                        </div>
+
+                        <!-- Select Third-Party Vendor -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-dark small">Select Professional Service Provider</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-patch-check"></i></span>
+                                <select asp-for="VendorId" class="form-select border-start-0 ps-0" asp-items="Model.VendorsList">
+                                    <option value="">-- Choose Categorized Vendor --</option>
+                                </select>
+                            </div>
+                            <small class="text-muted fs-7 mt-1 d-block">Covers Caterers, Decorators, Photographers, and DJ/Sound networks.</small>
+                            <span asp-validation-for="VendorId" class="text-danger small mt-1 d-block"></span>
+                        </div>
+
+                        <!-- Final Agreed Contract Rate -->
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-dark small">Negotiated Rate ($)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-currency-dollar"></i></span>
+                                <input asp-for="FinalAgreedPrice" type="number" step="0.01" class="form-control border-start-0 ps-0" placeholder="0.00" />
+                            </div>
+                            <span asp-validation-for="FinalAgreedPrice" class="text-danger small mt-1 d-block"></span>
+                        </div>
+
+                        <!-- Special Instructions Textarea -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-dark small">Special Layout & Setup Instructions</label>
+                            <textarea asp-for="SpecialInstructions" class="form-control" rows="3" placeholder="Specify menu variants, sound cues, or specific camera styles required..."></textarea>
+                            <span asp-validation-for="SpecialInstructions" class="text-danger small mt-1 d-block"></span>
+                        </div>
+
+                        <!-- Actions Buttons Row -->
+                        <div class="d-flex gap-2 justify-content-end pt-3 border-top border-light">
+                            <a class="btn btn-outline-secondary px-4 rounded-pill" href="javascript:history.back()">Back</a>
+                            <button type="submit" class="btn btn-success px-4 rounded-pill shadow-sm fw-semibold">Save Assignment</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

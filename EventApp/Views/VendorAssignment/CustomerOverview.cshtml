@@ -1,0 +1,72 @@
+﻿@model IEnumerable<GatherWise.Domain.Entities.VendorAssignment>
+
+@{
+    ViewData["Title"] = "Your Event Team";
+}
+
+<div class="container my-4">
+    <!-- Header Summary Section -->
+    <div class="mb-5">
+        <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 mb-2 fw-semibold">
+            <i class="bi bi-shield-check me-1"></i> Confirmed Crew
+        </span>
+        <h1 class="h2 fw-bold text-dark mb-1">Your Assigned Event Experts</h1>
+        <p class="text-muted small mb-0">Review the professionals assigned by GatherWise administrators to manage your upcoming event items.</p>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 bg-white rounded-4 shadow-sm border border-light">
+            <div class="p-4 bg-light text-secondary rounded-circle d-inline-block mb-3">
+                <i class="bi bi-people display-4"></i>
+            </div>
+            <h5 class="fw-bold text-dark mb-1">No Vendors Bound to This Booking Yet</h5>
+            <p class="text-muted small mx-auto mb-0" style="max-width: 420px;">
+                Our management coordinators are curating the ideal setup teams. Check back soon to see your updated service list.
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var assignment in Model)
+            {
+                <!-- Dynamic Contextual Icon Picker Logic depending on operational Vendor strings -->
+                string categoryIcon = "bi-patch-check-fill";
+                string categoryColor = "text-success bg-success";
+                string vendorType = assignment.Vendor.ServiceCategory ?? "General Service";
+
+                if (vendorType.Contains("Food") || vendorType.Contains("Cater")) { categoryIcon = "bi-egg-fried"; categoryColor = "text-warning bg-warning"; }
+                else if (vendorType.Contains("Decor") || vendorType.Contains("Florist")) { categoryIcon = "bi-flower1"; categoryColor = "text-primary bg-primary"; }
+                else if (vendorType.Contains("Photo") || vendorType.Contains("Video")) { categoryIcon = "bi-camera-video"; categoryColor = "text-danger bg-danger"; }
+                else if (vendorType.Contains("DJ") || vendorType.Contains("Sound")) { categoryIcon = "bi-music-note-beamed"; categoryColor = "text-info bg-info"; }
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+                        <div class="card-body p-4">
+                            <!-- Category Badge Header row -->
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <span class="badge @categoryColor bg-opacity-10 @categoryColor.Split(' ')[0] rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1 small">
+                                    <i class="bi @categoryIcon"></i> @vendorType
+                                </span>
+                                <span class="text-muted small font-monospace">ID #@assignment.Id</span>
+                            </div>
+
+                            <!-- Vendor Profile Core Elements -->
+                            <h5 class="fw-bold text-dark mb-1">@assignment.Vendor?.BusinessName</h5>
+                            <p class="text-muted fs-7 mb-3"><i class="bi bi-telephone me-1"></i> @(assignment.Vendor?.Phone ?? "Verified Partner")</p>
+                            
+                            <!-- Custom Admin-Curated Instructions Textbox Block -->
+                            <div class="bg-light rounded-3 p-3 mb-0 border border-light">
+                                <span class="text-secondary extreme-small text-uppercase fw-bold d-block mb-1" style="font-size:0.7rem; tracking-wide">Specialist Directives</span>
+                                <p class="text-dark small mb-0 font-italic">
+                                    "@(string.IsNullOrEmpty(assignment.SpecialInstructions) ? "Standard layout execution parameters." : assignment.SpecialInstructions)"
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

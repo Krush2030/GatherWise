@@ -37,5 +37,12 @@ namespace GatherWise.Domain.Entities
         public decimal BasePrice { get; set; }
 
         public bool IsActive { get; set; } = true;
+
+        // Add this inside your Vendor.cs entity class
+        [Required]
+        public string OwnerId { get; set; } = string.Empty;
+
+        [ForeignKey("OwnerId")]
+        public ApplicationUser? Owner { get; set; }
     }
 }
