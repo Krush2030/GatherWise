@@ -1,53 +1,49 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using GatherWise.DataAccess.Data;
 using GatherWise.Domain.Entities;
+using GatherWise.Domain.Interfaces;
 using GatherWise.Services.Interfaces;
 
 namespace GatherWise.Services.Implementations
 {
     public class VenueService : IVenueService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IVenueRepository _venueRepository;
 
-        public VenueService(ApplicationDbContext context)
+        public VenueService(IVenueRepository venueRepository)
         {
-            _context = context;
+            _venueRepository = venueRepository;
         }
 
         public async Task<IEnumerable<Venue>> GetAllVenuesAsync()
         {
-            return await _context.Venues.Include(v => v.Images).ToListAsync();
+            return await _venueRepository.GetAllAsync();
         }
 
         public async Task<Venue?> GetVenueByIdAsync(int id)
         {
-            return await _context.Venues.Include(v => v.Images).FirstOrDefaultAsync(v => v.Id == id);
+            return await _venueRepository.GetByIdAsync(id);
         }
 
         public async Task<Venue> CreateVenueAsync(Venue venue)
         {
-            _context.Venues.Add(venue);
-            await _context.SaveChangesAsync();
-            return venue;
+            return await _venueRepository.AddAsync(venue);
         }
 
         public async Task UpdateVenueAsync(Venue venue)
         {
-            _context.Venues.Update(venue);
-            await _context.SaveChangesAsync();
+            await _venueRepository.UpdateAsync(venue);
         }
 
         public async Task DeleteVenueAsync(int id)
         {
-            var venue = await _context.Venues.Include(v => v.Images).FirstOrDefaultAsync(v => v.Id == id);
+            var venue = await _venueRepository.GetByIdAsync(id);
             if (venue != null)
             {
+                // Business logic: Remove file attachments from local disk storage 
                 foreach (var img in venue.Images)
                 {
-                    // Trims leading '/' from path combine steps
                     string cleanPath = img.ImagePath.TrimStart('/');
                     string fullPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", cleanPath);
 
@@ -57,8 +53,8 @@ namespace GatherWise.Services.Implementations
                     }
                 }
 
-                _context.Venues.Remove(venue);
-                await _context.SaveChangesAsync();
+                // Data access persistence call
+                await _venueRepository.DeleteAsync(venue);
             }
         }
     }

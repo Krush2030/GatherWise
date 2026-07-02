@@ -1,46 +1,31 @@
 ﻿using System;
-using System.Linq;
+using System.Collections.Generic;
+using System.Linq; // Ensure Linq is included for .ToList()
 using System.Threading.Tasks;
-using GatherWise.DataAccess.Data;
-using GatherWise.Domain.Entities;
-using GatherWise.Domain.Enums;
+using GatherWise.Domain.Interfaces;
 using GatherWise.Domain.ViewModels;
 using GatherWise.Services.Interfaces;
-using Microsoft.EntityFrameworkCore;
 
 namespace GatherWise.Services.Implementations
 {
     public class DashboardService : IDashboardService
     {
-        // Changed from DbContext to ApplicationDbContext
-        private readonly ApplicationDbContext _context;
+        private readonly IDashboardRepository _dashboardRepository;
 
-        public DashboardService(ApplicationDbContext context)
+        public DashboardService(IDashboardRepository dashboardRepository)
         {
-            _context = context;
+            _dashboardRepository = dashboardRepository;
         }
 
         public async Task<DashboardViewModel> GetHostDashboardDataAsync(string hostId)
         {
             var model = new DashboardViewModel
             {
-                ActiveUserRole = "Event Host"
+                ActiveUserRole = "Event Host",
+                TotalSpent = await _dashboardRepository.GetTotalSpentByHostAsync(hostId),
+                // Materialize the IEnumerable into a concrete List
+                UpcomingReservations = (await _dashboardRepository.GetUpcomingReservationsByHostAsync(hostId, 5)).ToList()
             };
-
-            // 1. Calculate overall event expenditure outlays from paid invoices
-            model.TotalSpent = await _context.Set<Payment>()
-                .Where(p => p.Booking.EventHostId == hostId && p.Status == PaymentStatus.FullyPaid)
-                .SumAsync(p => p.Amount);
-
-            // 2. Fetch upcoming chronological booking confirmation lines
-            model.UpcomingReservations = await _context.Set<Booking>()
-                .Include(b => b.Venue)
-                .Include(b => b.Slot)
-                .Where(b => b.EventHostId == hostId && b.Status == BookingStatus.Confirmed && b.Slot.Date >= DateTime.UtcNow.Date)
-                .OrderBy(b => b.Slot.Date)
-                .ThenBy(b => b.Slot.StartTime)
-                .Take(5)
-                .ToListAsync();
 
             return model;
         }
@@ -49,47 +34,18 @@ namespace GatherWise.Services.Implementations
         {
             var model = new DashboardViewModel
             {
-                ActiveUserRole = "Venue Owner"
+                ActiveUserRole = "Venue Owner",
+                TotalEarnings = await _dashboardRepository.GetTotalEarningsByOwnerAsync(ownerId),
+                // Materialize the IEnumerable into a concrete List
+                IncomingRequests = (await _dashboardRepository.GetIncomingPendingRequestsByOwnerAsync(ownerId)).ToList()
             };
 
-            // 1. Calculate Total Gross Earnings from properties owned by this operator
-            model.TotalEarnings = await _context.Set<Payment>()
-                .Where(p => p.Booking.Venue.OwnerId == ownerId && p.Status == PaymentStatus.FullyPaid)
-                .SumAsync(p => p.Amount);
+            // Calculate occupancy metrics
+            var (bookedCount, totalCount) = await _dashboardRepository.GetSlotCountsByOwnerAsync(ownerId);
+            model.VenueOccupancyRate = totalCount > 0 ? ((double)bookedCount / totalCount) * 100 : 0.0;
 
-            // 2. Fetch Incoming Requests that require confirmation or processing
-            model.IncomingRequests = await _context.Set<Booking>()
-                .Include(b => b.Venue)
-                .Include(b => b.Slot)
-                .Where(b => b.Venue.OwnerId == ownerId && b.Status == BookingStatus.Pending)
-                .OrderByDescending(b => b.CreatedAt)
-                .ToListAsync();
-
-            // 3. Compute Venue Occupancy Rate Metric (Booked Slots / Total Slots configured)
-            var totalOwnerSlotsCount = await _context.Set<Slot>()
-                .CountAsync(s => s.Venue.OwnerId == ownerId);
-
-            if (totalOwnerSlotsCount > 0)
-            {
-                var bookedOwnerSlotsCount = await _context.Set<Slot>()
-                    .CountAsync(s => s.Venue.OwnerId == ownerId && s.IsBooked);
-
-                // Percentage calculation logic metrics
-                model.VenueOccupancyRate = ((double)bookedOwnerSlotsCount / totalOwnerSlotsCount) * 100;
-            }
-            else
-            {
-                model.VenueOccupancyRate = 0.0;
-            }
-
-            // 4. Extract most popular time slot strings using GroupBy aggregation mappings
-            model.PopularTimeSlots = await _context.Set<Booking>()
-                .Where(b => b.Venue.OwnerId == ownerId && b.Status == BookingStatus.Confirmed)
-                .GroupBy(b => new { b.Slot.StartTime, b.Slot.EndTime })
-                .OrderByDescending(g => g.Count())
-                .Select(g => $"{g.Key.StartTime:hh\\:mm} - {g.Key.EndTime:hh\\:mm} ({g.Count()} bookings)")
-                .Take(3)
-                .ToListAsync();
+            // Fetch aggregate group tracking lines
+            model.PopularTimeSlots = (await _dashboardRepository.GetPopularTimeSlotsByOwnerAsync(ownerId, 3)).ToList();
 
             return model;
         }

@@ -1,5 +1,7 @@
 using GatherWise.DataAccess.Data;
+using GatherWise.DataAccess.Repositories;
 using GatherWise.Domain.Entities;
+using GatherWise.Domain.Interfaces;
 using GatherWise.Services.Implementations;
 using GatherWise.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -20,6 +22,12 @@ namespace EventApp
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(connectionString));
+
+            builder.Services.AddScoped<IVenueRepository, VenueRepository>();
+            builder.Services.AddScoped<ISlotRepository, SlotRepository>();
+            builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+            builder.Services.AddScoped<IBookingRepository, BookingRepository>();
+            builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
 
             builder.Services.AddScoped<IVenueService, VenueService>();
             builder.Services.AddScoped<ISlotService, SlotService>();
