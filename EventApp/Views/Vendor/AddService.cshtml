@@ -1,0 +1,117 @@
+﻿@model GatherWise.Domain.ViewModels.VendorServiceViewModel
+
+@{
+    ViewData["Title"] = "Add New Service Listing";
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+                <div class="bg-success bg-opacity-10 text-success p-4 border-bottom border-light">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-2 bg-success text-white rounded-3 fs-4 d-inline-flex">
+                            <i class="bi bi-node-plus"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-0 fw-bold text-dark">Create Commercial Service Offering</h4>
+                            <p class="text-muted mb-0 small">Add a new operational line item to your vendor profile collection.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-4">
+                    <!-- ENCTYPE IS ABSOLUTELY REQUIRED FOR FILE UPLOADS -->
+                    <form asp-action="AddService" method="post" enctype="multipart/form-data">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3 small"></div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-dark small">Service Variant Name</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted"><i class="bi bi-card-heading"></i></span>
+                                <input asp-for="ServiceName" class="form-control" placeholder="e.g. Luxury Candid Wedding Shoot Package" />
+                            </div>
+                            <span asp-validation-for="ServiceName" class="text-danger small mt-1 d-block"></span>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold text-dark small">Service Specialization Category</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-tags"></i></span>
+                                    <select asp-for="ServiceCategory" class="form-select">
+                                        <option value="">-- Choose what service you offer --</option>
+                                        <option value="Caterers (Food & Beverages)">Caterers (Food & Beverages)</option>
+                                        <option value="Decorators & Florists (Theme & Setup)">Decorators & Florists (Theme & Setup)</option>
+                                        <option value="Photographers & Videographers (Media capture)">Photographers & Videographers (Media capture)</option>
+                                        <option value="DJs / Sound Systems (Entertainment)">DJs / Sound Systems (Entertainment)</option>
+                                    </select>
+                                </div>
+                                <span asp-validation-for="ServiceCategory" class="text-danger small mt-1 d-block"></span>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold text-dark small">Direct Service Phone Line</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted"><i class="bi bi-telephone-plus"></i></span>
+                                    <input asp-for="ServicePhone" class="form-control" placeholder="Hotline number" />
+                                </div>
+                                <span asp-validation-for="ServicePhone" class="text-danger small mt-1 d-block"></span>
+                            </div>
+                        </div>
+
+                        <!-- Scaled Pricing Matrix Section -->
+                        <div class="card bg-light border-0 p-3 mb-4 rounded-3">
+                            <h6 class="fw-bold text-dark mb-2 small text-uppercase tracking-wider">Dynamic Scaled Quote Rate Configuration</h6>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label text-secondary small fw-medium">Base Charge Rate Amount (₹)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white text-muted"><i class="bi bi-currency-rupee"></i></span>
+                                        <input asp-for="BasePrice" type="number" step="0.01" class="form-control" placeholder="0.00" />
+                                    </div>
+                                    <span asp-validation-for="BasePrice" class="text-danger small mt-1 d-block"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-secondary small fw-medium">Per Specific Count of Persons</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white text-muted"><i class="bi bi-people"></i></span>
+                                        <input asp-for="PerNumberOfPersons" type="number" class="form-control" placeholder="e.g. 100" />
+                                    </div>
+                                    <span asp-validation-for="PerNumberOfPersons" class="text-danger small mt-1 d-block"></span>
+                                </div>
+                            </div>
+                            <small class="text-muted d-block mt-2 font-monospace" style="font-size:0.75rem;">Example: Setting ₹50,000 base price per 100 persons allows buyers to calculate incremental multi-person scales cleanly.</small>
+                        </div>
+
+                        <!-- Image File Upload Fields -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold text-dark small"><i class="bi bi-image text-success me-1"></i>Main Photo / Brand Logo Banner</label>
+                                <input asp-for="MainPhoto" type="file" accept="image/*" class="form-control" />
+                                <span asp-validation-for="MainPhoto" class="text-danger small mt-1 d-block"></span>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold text-dark small"><i class="bi bi-images text-primary me-1"></i>Supporting Gallery Assets (Multiple)</label>
+                                <input asp-for="GalleryImages" type="file" accept="image/*" multiple class="form-control" />
+                                <span asp-validation-for="GalleryImages" class="text-danger small mt-1 d-block"></span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-end pt-3 border-top border-light mt-4">
+                            <a class="btn btn-outline-secondary px-4 rounded-pill" asp-action="MyServices">Back to Dashboard</a>
+                            <button type="submit" class="btn btn-success px-4 rounded-pill shadow-sm fw-semibold">Publish New Listing</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

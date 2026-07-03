@@ -16,7 +16,9 @@ namespace GatherWise.DataAccess.Data
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Vendor> Vendors { get; set; }
-        public DbSet<VenueImage> VenueImages { get; set; } // <-- ADD THIS LINE
+        public DbSet<VendorService> VendorServices { get; set; } // <-- ADDED THIS
+        public DbSet<VendorServiceImage> VendorServiceImages { get; set; } // <-- ADDED THIS
+        public DbSet<VenueImage> VenueImages { get; set; }
         public DbSet<VendorAssignment> VendorAssignments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -28,21 +30,21 @@ namespace GatherWise.DataAccess.Data
                 .HasOne(s => s.Venue)
                 .WithMany()
                 .HasForeignKey(s => s.VenueId)
-                .OnDelete(DeleteBehavior.Cascade); // If a venue is deleted, its calendar slots are deleted
+                .OnDelete(DeleteBehavior.Cascade);
 
             // 2. Booking -> Venue Relationship
             modelBuilder.Entity<Booking>()
                 .HasOne(b => b.Venue)
                 .WithMany()
                 .HasForeignKey(b => b.VenueId)
-                .OnDelete(DeleteBehavior.Restrict); // Prevents deleting a venue if historic bookings exist
+                .OnDelete(DeleteBehavior.Restrict);
 
             // 3. Booking -> Slot Relationship
             modelBuilder.Entity<Booking>()
                 .HasOne(b => b.Slot)
                 .WithMany()
                 .HasForeignKey(b => b.SlotId)
-                .OnDelete(DeleteBehavior.Restrict); // Prevents deleting a slot if it has an active booking
+                .OnDelete(DeleteBehavior.Restrict);
 
             // 4. Payment -> Booking Relationship
             modelBuilder.Entity<Payment>()
@@ -77,8 +79,9 @@ namespace GatherWise.DataAccess.Data
                 .Property(p => p.Amount)
                 .HasPrecision(18, 2);
 
-            modelBuilder.Entity<Vendor>()
-                .Property(v => v.BasePrice)
+            // CHANGED: BasePrice is configured on VendorService now, not Vendor
+            modelBuilder.Entity<VendorService>()
+                .Property(vs => vs.BasePrice)
                 .HasPrecision(18, 2);
 
             modelBuilder.Entity<VendorAssignment>()
@@ -89,7 +92,7 @@ namespace GatherWise.DataAccess.Data
                 .HasOne(vi => vi.Venue)
                 .WithMany(v => v.Images)
                 .HasForeignKey(vi => vi.VenueId)
-                .OnDelete(DeleteBehavior.Cascade); 
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

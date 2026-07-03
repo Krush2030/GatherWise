@@ -1,0 +1,102 @@
+﻿@model GatherWise.Domain.Entities.VendorService
+
+@{
+    ViewData["Title"] = Model.ServiceName + " Details";
+}
+
+<div class="container my-5">
+    <div class="mb-4">
+        <a asp-action="MyServices" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+            <i class="bi bi-arrow-left me-1"></i> Back to My Services
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Media Assets Showcase Column -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+                <div class="position-relative bg-light" style="height: 400px;">
+                    <img src="@Model.MainPhotoPath" class="w-100 h-100" style="object-fit: cover;" alt="@Model.ServiceName Main Banner" />
+                    <span class="position-absolute top-3 start-3 badge bg-success py-2 px-3 rounded-pill text-white shadow-sm">
+                        @Model.ServiceCategory
+                    </span>
+                </div>
+            </div>
+
+            <!-- Supporting Multi-Image Grid Gallery -->
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-images text-success me-2"></i>Service Gallery Assets</h5>
+            @if (Model.GalleryImages == null || !Model.GalleryImages.Any())
+            {
+                <div class="bg-light rounded-4 p-4 text-center border border-light-subtle">
+                    <p class="text-muted small mb-0 font-monospace">No additional gallery images uploaded for this service.</p>
+                </div>
+            }
+            else
+            {
+                <div class="row g-3">
+                    @foreach (var img in Model.GalleryImages)
+                    {
+                        <div class="col-6 col-md-4">
+                            <div class="card border-0 shadow-sm rounded-3 overflow-hidden bg-light image-hover-card" style="height: 120px;">
+                                <img src="@img.ImagePath" class="w-100 h-100" style="object-fit: cover;" alt="Gallery Image" />
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Meta Specification Details Column -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 d-flex flex-column">
+                <span class="text-uppercase text-muted font-monospace tracking-wider small mb-1">Service Listing Information</span>
+                <h3 class="fw-bold text-dark mb-3">@Model.ServiceName</h3>
+                
+                <hr class="text-light my-3">
+
+                <!-- Contact Block -->
+                <div class="mb-4">
+                    <h6 class="fw-bold text-secondary small text-uppercase mb-2">Vendor Details & Contact</h6>
+                    <div class="bg-light rounded-3 p-3 border border-light-subtle">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="bg-success bg-opacity-10 text-success p-2 rounded-2"><i class="bi bi-telephone-forward"></i></div>
+                            <div>
+                                <small class="text-muted d-block" style="font-size:0.75rem;">Service Phone</small>
+                                <span class="fw-semibold text-dark">@Model.ServicePhone</span>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-2"><i class="bi bi-building"></i></div>
+                            <div>
+                                <small class="text-muted d-block" style="font-size:0.75rem;">Business Name</small>
+                                <span class="fw-semibold text-dark">@Model.Vendor?.BusinessName</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Price Metric Box -->
+                <div class="mt-auto">
+                    <h6 class="fw-bold text-secondary small text-uppercase mb-2">Pricing Structure Matrix</h6>
+                    <div class="bg-success bg-opacity-10 rounded-4 p-4 border border-success border-opacity-10">
+                        <span class="text-success small d-block mb-1 fw-medium">Base Charge Rate</span>
+                        <h2 class="fw-bold text-success mb-2">₹@Model.BasePrice.ToString("N2")</h2>
+                        <div class="d-flex align-items-center gap-2 text-muted small border-top border-success border-opacity-10 pt-2 mt-2">
+                            <i class="bi bi-people-fill text-success"></i>
+                            <span>Applies up to a maximum capacity of <strong>@Model.PerNumberOfPersons persons</strong>.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .image-hover-card {
+        transition: transform 0.2s ease;
+    }
+    .image-hover-card:hover {
+        transform: scale(1.04);
+    }
+</style>
