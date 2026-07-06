@@ -42,6 +42,7 @@ namespace GatherWise.Domain.Entities
         public BookingStatus Status { get; set; } = BookingStatus.Pending;
 
         // Navigation Properties for EF Core Joins
+        public ICollection<BookingService> BookedServices { get; set; } = new List<BookingService>();
         public Venue? Venue { get; set; }
         public Slot? Slot { get; set; }
     }

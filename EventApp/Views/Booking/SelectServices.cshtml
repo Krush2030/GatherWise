@@ -1,0 +1,103 @@
+﻿@model IEnumerable<GatherWise.Domain.Entities.VendorService>
+
+@{
+    ViewData["Title"] = "Enhance Your Event - Select Services";
+    int bookingId = ViewBag.BookingId;
+}
+
+<div class="container my-5">
+    <!-- Progress Header Tracker Bar -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <span class="badge bg-success text-uppercase px-3 py-2 rounded-pill mb-2 shadow-sm">Step 2 of 2</span>
+            <h2 class="fw-bold text-dark mb-1">Enhance Your Event Itinerary</h2>
+            <p class="text-muted mb-0">Select from our verified professional vendors to fulfill your catering, decoration, or media operational needs.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a asp-action="SummaryDetails" asp-route-id="@bookingId" class="btn btn-dark rounded-pill px-4 shadow-sm fw-semibold">
+                Finish & View Summary <i class="bi bi-arrow-right-circle-fill ms-1"></i>
+            </a>
+        </div>
+    </div>
+
+    <hr class="border-light mb-5">
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="text-center py-5 my-4 bg-white rounded-4 shadow-sm border border-light">
+            <div class="display-3 text-muted opacity-25 mb-3">
+                <i class="bi bi-clipboard-x"></i>
+            </div>
+            <h5 class="fw-bold text-secondary">No Vendor Services Available</h5>
+            <p class="text-muted small mb-4">There are currently no active commercial operational capabilities or vendor lists registered in our system repository.</p>
+            <a asp-action="SummaryDetails" asp-route-id="@bookingId" class="btn btn-outline-dark rounded-pill px-4 btn-sm fw-semibold">Skip directly to summary</a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden bg-white hover-card">
+                        <!-- Top Banner Image Segment -->
+                        <div class="position-relative bg-light" style="height: 200px; overflow: hidden;">
+                            @if (!string.IsNullOrEmpty(item.MainPhotoPath))
+                            {
+                                <img src="@item.MainPhotoPath" class="w-100 h-100" style="object-fit: cover;" alt="Vendor Service Media Listing" />
+                            }
+                            else
+                            {
+                                <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success">
+                                    <i class="bi bi-patch-plus fs-1"></i>
+                                </div>
+                            }
+                            <span class="position-absolute top-3 start-3 badge bg-dark bg-opacity-75 py-2 px-3 rounded-pill text-white small">
+                                @item.ServiceCategory
+                            </span>
+                        </div>
+
+                        <!-- Card Core Body Segment -->
+                        <div class="card-body p-4 d-flex flex-column">
+                            <h5 class="fw-bold text-dark mb-1 text-truncate">@item.ServiceName</h5>
+                            <small class="text-muted d-block mb-3">
+                                <i class="bi bi-building text-primary me-1"></i> Provided by: <strong>@item.Vendor?.BusinessName</strong>
+                            </small>
+
+                            <!-- Pricing Info Field Box Matrix -->
+                            <div class="bg-light rounded-3 p-3 border border-light-subtle mb-4 mt-auto">
+                                <span class="text-secondary small d-block mb-1">Standard Flat Rate Fee</span>
+                                <div class="d-flex align-items-baseline gap-1 text-success">
+                                    <h4 class="fw-bold mb-0">₹@item.BasePrice.ToString("N2")</h4>
+                                    <span class="text-muted small">/ up to @item.PerNumberOfPersons guests</span>
+                                </div>
+                            </div>
+
+                            <!-- Form Execution Interactive Element Button -->
+                            <form asp-action="BookService" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="bookingId" value="@bookingId" />
+                                <input type="hidden" name="serviceId" value="@item.Id" />
+                                
+                                <button type="submit" class="btn btn-outline-success w-100 rounded-pill fw-semibold btn-sm py-2 d-flex align-items-center justify-content-center gap-2">
+                                    <i class="bi bi-cart-plus-fill"></i> Add to This Booking
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    .hover-card {
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+        .hover-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 .5rem 1.5rem rgba(0,0,0,.08) !important;
+        }
+</style>

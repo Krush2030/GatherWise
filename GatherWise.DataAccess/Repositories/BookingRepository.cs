@@ -54,6 +54,8 @@ namespace GatherWise.DataAccess.Repositories
             return await _context.Bookings
                 .Include(b => b.Venue)
                 .Include(b => b.Slot)
+                .Include(b => b.BookedServices)
+                    .ThenInclude(bs => bs.VendorService)
                 .FirstOrDefaultAsync(b => b.Id == id);
         }
 

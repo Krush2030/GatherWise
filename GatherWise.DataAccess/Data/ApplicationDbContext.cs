@@ -16,10 +16,13 @@ namespace GatherWise.DataAccess.Data
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Vendor> Vendors { get; set; }
-        public DbSet<VendorService> VendorServices { get; set; } // <-- ADDED THIS
-        public DbSet<VendorServiceImage> VendorServiceImages { get; set; } // <-- ADDED THIS
+        public DbSet<VendorService> VendorServices { get; set; }
+        public DbSet<VendorServiceImage> VendorServiceImages { get; set; }
         public DbSet<VenueImage> VenueImages { get; set; }
         public DbSet<VendorAssignment> VendorAssignments { get; set; }
+
+        // 🚀 ADD THIS LINE TO FIX THE FIRST COMPILATION ERROR:
+        public DbSet<BookingService> BookingServices { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -79,7 +82,6 @@ namespace GatherWise.DataAccess.Data
                 .Property(p => p.Amount)
                 .HasPrecision(18, 2);
 
-            // CHANGED: BasePrice is configured on VendorService now, not Vendor
             modelBuilder.Entity<VendorService>()
                 .Property(vs => vs.BasePrice)
                 .HasPrecision(18, 2);
@@ -93,6 +95,11 @@ namespace GatherWise.DataAccess.Data
                 .WithMany(v => v.Images)
                 .HasForeignKey(vi => vi.VenueId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // 🚀 ADD THIS NEW BOUND RELATIONSHIP FOR PRICE TRACKING:
+            modelBuilder.Entity<BookingService>()
+                .Property(bs => bs.PriceAtBooking)
+                .HasPrecision(18, 2);
         }
     }
 }

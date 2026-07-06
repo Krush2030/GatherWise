@@ -14,6 +14,8 @@ namespace GatherWise.Services.Interfaces
         //Task CancelBookingAsync(int id);
         Task UpdateBookingStatusAsync(int id, BookingStatus status);
 
+        Task<Booking?> GetWithDetailsByIdAsync(int id);
+
         Task<IEnumerable<Booking>> GetBookingsByOwnerIdAsync(string ownerId);
 
         Task<bool> CancelBookingAsync(int bookingId);

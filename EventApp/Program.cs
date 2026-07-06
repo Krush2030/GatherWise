@@ -31,7 +31,7 @@ namespace EventApp
 
             builder.Services.AddScoped<IVenueService, VenueService>();
             builder.Services.AddScoped<ISlotService, SlotService>();
-            builder.Services.AddScoped<IBookingService, BookingService>();
+            builder.Services.AddScoped<GatherWise.Services.Interfaces.IBookingService, GatherWise.Services.Implementations.BookingService>();
             builder.Services.AddScoped<IPaymentService, PaymentService>();
             builder.Services.AddScoped<IDashboardService, DashboardService>();
             builder.Services.AddScoped<IVendorAssignmentService, VendorAssignmentService>();

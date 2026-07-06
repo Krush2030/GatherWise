@@ -1,0 +1,140 @@
+﻿@model GatherWise.Domain.Entities.Booking
+
+@{
+    ViewData["Title"] = "Unified Event Itinerary Summary";
+    decimal servicesTotal = Model.BookedServices.Sum(s => s.PriceAtBooking);
+    decimal overallGrandTotal = Model.Venue.PricePerSlot + servicesTotal;
+}
+
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-light">
+        <div>
+            <span class="badge bg-primary text-uppercase mb-2 px-3 py-2 rounded-pill shadow-sm">Reservation Sheet</span>
+            <h2 class="fw-bold text-dark mb-0">Event Itinerary Summary ##@Model.Id</h2>
+        </div>
+        <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4 btn-sm fw-semibold">
+            <i class="bi bi-grid-fill me-1"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left Side Column: Venue and Selected Services Cards -->
+        <div class="col-lg-8">
+            
+            <!-- SECTION A: VENUE BREAKDOWN DETAILS -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+                <div class="bg-dark p-3 text-white d-flex align-items-center gap-2">
+                    <i class="bi bi-building-check fs-5 text-success"></i>
+                    <h5 class="mb-0 fw-bold">1. Reserved Structural Venue Space</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h4 class="fw-bold text-dark mb-2">@Model.Venue.Name</h4>
+                            <p class="text-muted mb-3"><i class="bi bi-geo-alt-fill text-danger me-1"></i> @Model.Venue.Location</p>
+                            
+                            <div class="row g-2 text-secondary small font-monospace">
+                                <div class="col-6"><i class="bi bi-calendar-event text-primary me-2"></i>Date: @Model.Slot.Date.ToString("dd-MMM-yyyy")</div>
+                                <div class="col-6"><i class="bi bi-clock text-primary me-2"></i>Time: @Model.Slot.StartTime.ToString(@"hh\:mm") - @Model.Slot.EndTime.ToString(@"hh\:mm")</div>
+                                <div class="col-12 mt-2"><i class="bi bi-people text-primary me-2"></i>Expected Attendance: <strong>@Model.EstimatedGuests</strong> / @Model.Venue.Capacity max guests</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                            <span class="text-muted small d-block mb-1">Venue Rental Cost</span>
+                            <h3 class="fw-bold text-success mb-0">₹@Model.Venue.PricePerSlot.ToString("N2")</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION B: VENDOR SERVICES SELECTIONS -->
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+                <div class="bg-dark p-3 text-white d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-bag-check-fill fs-5 text-success"></i>
+                        <h5 class="mb-0 fw-bold">2. Selected Add-On Professional Services</h5>
+                    </div>
+                    <a asp-action="SelectServices" asp-route-bookingId="@Model.Id" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold py-1">
+                        <i class="bi bi-plus-lg me-1"></i> Add More Services
+                    </a>
+                </div>
+                <div class="card-body p-4">
+                    @if (!Model.BookedServices.Any())
+                    {
+                        <div class="text-center py-4 bg-light rounded-3 border border-dashed border-light-subtle">
+                            <i class="bi bi-patch-plus text-muted fs-2 mb-2 d-block"></i>
+                            <p class="text-muted mb-0 small">No catering, decoration, or media vendor service capabilities have been linked to this itinerary stack yet.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table align-middle table-borderless mb-0">
+                                <thead class="table-light rounded-3 font-monospace small">
+                                    <tr>
+                                        <th>Service Particulars</th>
+                                        <th>Classification Category</th>
+                                        <th class="text-end">Locked Service Price Rate</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.BookedServices)
+                                    {
+                                        <tr class="border-bottom border-light">
+                                            <td>
+                                                <div class="d-flex align-items-center gap-3">
+                                                    <img src="@item.VendorService.MainPhotoPath" class="rounded-3 shadow-sm" style="width: 50px; height: 50px; object-fit: cover;" alt="" />
+                                                    <div>
+                                                        <h6 class="fw-bold text-dark mb-0">@item.VendorService.ServiceName</h6>
+                                                        <small class="text-muted text-xs"><i class="bi bi-telephone text-success me-1"></i>@item.VendorService.ServicePhone</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td><span class="badge bg-light text-dark border border-secondary border-opacity-15 px-3 py-2 rounded-pill">@item.VendorService.ServiceCategory</span></td>
+                                            <td class="text-end fw-bold text-dark">₹@item.PriceAtBooking.ToString("N2")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Side Column: Cost Aggregations Ledger Sheet Card -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 sticky-top" style="top: 2rem;">
+                <h5 class="fw-bold text-dark mb-3 pb-2 border-bottom border-light"><i class="bi bi-receipt text-success me-2"></i>Cost Summary Ledger</h5>
+                
+                <div class="d-flex justify-content-between align-items-center mb-2 text-secondary small">
+                    <span>Base Space Rental Charges</span>
+                    <span class="fw-semibold">₹@Model.Venue.PricePerSlot.ToString("N2")</span>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mb-3 text-secondary small">
+                    <span>Add-On Vendor Offerings (@Model.BookedServices.Count)</span>
+                    <span class="fw-semibold">₹@servicesTotal.ToString("N2")</span>
+                </div>
+
+                <div class="bg-light p-3 rounded-4 mb-4 border border-light-subtle">
+                    <div class="d-flex justify-content-between align-items-baseline">
+                        <span class="text-dark fw-bold mb-0">Total Live Cost</span>
+                        <div class="text-end">
+                            <h3 class="fw-bold text-success mb-0">₹@overallGrandTotal.ToString("N2")</h3>
+                            <small class="text-muted d-block font-monospace" style="font-size:0.7rem;">Combined Billing Invoice</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Structural Operational Call-to-Actions -->
+                <div class="d-flex flex-column gap-2">
+                    <button onclick="window.print();" class="btn btn-success rounded-pill fw-bold w-100 py-2.5 shadow-sm">
+                        <i class="bi bi-printer-fill me-2"></i> Print Event Itinerary
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

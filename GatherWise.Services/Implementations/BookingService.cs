@@ -27,6 +27,13 @@ namespace GatherWise.Services.Implementations
             return await _bookingRepository.GetByHostIdAsync(hostId);
         }
 
+        // Renamed/Mapped properly to fulfill the 'IBookingService.GetWithDetailsByIdAsync' contract requirement
+        public async Task<Booking?> GetWithDetailsByIdAsync(int id)
+        {
+            return await _bookingRepository.GetWithDetailsByIdAsync(id);
+        }
+
+        // Keeping this alias just in case your controller calls it somewhere under this name signature
         public async Task<Booking?> GetBookingByIdAsync(int id)
         {
             return await _bookingRepository.GetWithDetailsByIdAsync(id);
@@ -50,7 +57,7 @@ namespace GatherWise.Services.Implementations
                 booking.CreatedAt = DateTime.UtcNow;
                 booking.Status = BookingStatus.Pending;
                 await _bookingRepository.AddAsync(booking);
-                await _bookingRepository.SaveChangesAsync(); // Commit to generate booking.Id identity increment value
+                await _bookingRepository.SaveChangesAsync();
 
                 // 3. Automatically append initial invoice statement entry
                 var initialInvoice = new Payment

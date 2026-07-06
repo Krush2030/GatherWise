@@ -113,22 +113,8 @@
                             </a>
                         </li>
 
-                        @* @if (User.IsInRole("Admin"))
-                        {
-                            <div>
-                                <a asp-controller="VendorAssignment" asp-action="Create" class="btn btn-success rounded-pill px-4 py-2 fw-semibold shadow-sm d-inline-flex align-items-center gap-2">
-                                    <i class="bi bi-plus-circle-fill"></i> Assign New Vendor
-                                </a>
-                            </div>
-                        } *@
                         @if (SignInManager.IsSignedIn(User))
                         {
-                            <li class="nav-item">
-                                <a class="nav-link text-success fw-semibold px-3" asp-area="" asp-controller="Dashboard" asp-action="Index">
-                                    <i class="bi bi-speedometer2 me-1"></i> Dashboard
-                                </a>
-                            </li>
-    
                             @if (User.IsInRole("Vendor"))
                             {
                                 <li class="nav-item">
@@ -143,7 +129,6 @@
                                 </li>
                             }
                         }
-
                     </ul>
 
                     <ul class="navbar-nav align-items-center gap-3">
