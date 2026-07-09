@@ -1,0 +1,131 @@
+﻿@model GatherWise.Domain.ViewModels.UserProfileViewModel
+
+@{
+    ViewData["Title"] = "Account Settings";
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show rounded-4 border-0 shadow-sm p-3 mb-4" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+                <div class="bg-dark p-4 text-white d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-success bg-opacity-20 text-success p-2 rounded-circle d-flex align-items-center justify-content-center" style="width: 55px; height: 55px;">
+                            <i class="bi bi-person-gear fs-3 text-success"></i>
+                        </div>
+                        <div>
+                            <h4 class="mb-0 fw-bold">Profile Identity Hub</h4>
+                            <p class="text-muted small mb-0 text-opacity-75">Review account settings and update functional operational metrics.</p>
+                        </div>
+                    </div>
+                    <div>
+                        @{
+                            string badgeClass = Model.CurrentRole switch
+                            {
+                                "Admin" => "bg-danger",
+                                "Vendor" => "bg-info text-dark",
+                                "Venue Owner" => "bg-primary",
+                                _ => "bg-success"
+                            };
+                        }
+                        <span class="badge @badgeClass py-2 px-3 rounded-pill fw-bold text-uppercase tracking-wider small">
+                            <i class="bi bi-shield-lock-fill me-1"></i> @Model.CurrentRole
+                        </span>
+                    </div>
+                </div>
+
+                <div class="card-body p-4 p-md-5">
+                    <form asp-action="Update" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="CurrentRole" />
+
+                        <div asp-validation-summary="ModelOnly" class="text-danger small mb-4"></div>
+
+                        <h5 class="fw-bold text-dark mb-3 pb-2 border-bottom border-light">
+                            <i class="bi bi-person-bounding-box text-success me-2"></i>Core Credentials
+                        </h5>
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label font-monospace small text-muted">Email Identity Address (Fixed)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light text-muted border-light-subtle"><i class="bi bi-envelope-fill"></i></span>
+                                    <input type="email" asp-for="Email" class="form-control bg-light text-muted border-light-subtle fw-medium" readonly data-bs-toggle="tooltip" title="Email changes are restricted for identity verification safety purposes." />
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label asp-for="FullName" class="form-label font-monospace small text-muted">Full Account Name</label>
+                                <input type="text" asp-for="FullName" class="form-control rounded-3" placeholder="Enter full name" />
+                                <span asp-validation-for="FullName" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="PhoneNumber" class="form-label font-monospace small text-muted">Active Contact Line Phone</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white text-secondary border-end-0"><i class="bi bi-telephone-fill"></i></span>
+                                    <input type="text" asp-for="PhoneNumber" class="form-control border-start-0 rounded-end-3" placeholder="Phone Number" />
+                                </div>
+                                <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                            </div>
+                        </div>
+
+                        @if (Model.CurrentRole == "Vendor")
+                        {
+                            <h5 class="fw-bold text-dark mb-3 GoldTop border-bottom border-light pt-2 pb-2">
+                                <i class="bi bi-briefcase-fill text-info me-2"></i>Commercial Merchant Sub-Profile Info
+                            </h5>
+                            <div class="row g-3 mb-4 bg-light p-3 rounded-4 border border-light-subtle">
+                                <div class="col-md-6">
+                                    <label asp-for="BusinessName" class="form-label font-monospace small text-muted">Registered Company Corporate Title</label>
+                                    <input type="text" asp-for="BusinessName" class="form-control bg-white" placeholder="e.g. GatherWise Catering Corp" />
+                                    <span asp-validation-for="BusinessName" class="text-danger small"></span>
+                                </div>
+                                <div class="col-md-6">
+                                    <label asp-for="ContactName" class="form-label font-monospace small text-muted">Assigned Vendor Representative Name</label>
+                                    <input type="text" asp-for="ContactName" class="form-control bg-white" placeholder="Public point of contact" />
+                                    <span asp-validation-for="ContactName" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        }
+                        else if (Model.CurrentRole == "Venue Owner")
+                        {
+                            <h5 class="fw-bold text-dark mb-3 border-bottom border-light pt-2 pb-2">
+                                <i class="bi bi-building-fill-gear text-primary me-2"></i>Estate Operational Diagnostics
+                            </h5>
+                            <div class="bg-light p-4 rounded-4 text-center border border-dashed text-secondary small">
+                                <i class="bi bi-building-check fs-2 text-primary mb-2 d-block"></i>
+                                Your Venue Management Dashboard links can be accessed directly from the main tab. Property registry attributes stay synchronized with local venue operations listings cleanly.
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="bg-success bg-opacity-5 p-3 rounded-4 border border-success border-opacity-10 mb-4 d-flex align-items-center gap-3">
+                                <i class="bi bi-info-circle-fill text-success fs-4"></i>
+                                <span class="text-muted small">You are logged in as an <strong>Event Host</strong>. You can book structural event venue spaces and attach customized technical service vendors to your checkout ledger seamlessly.</span>
+                            </div>
+                        }
+
+                        <div class="d-flex justify-content-end gap-2 pt-3 border-top border-light mt-4">
+                            <a asp-controller="Dashboard" asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4 fw-semibold btn-sm">Discard Changes</a>
+                            <button type="submit" class="btn btn-success rounded-pill px-5 fw-bold btn-sm shadow-sm">
+                                <i class="bi bi-cloud-arrow-up-fill me-1"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

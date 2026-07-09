@@ -53,13 +53,34 @@ namespace GatherWise.Web.Controllers
             return View(allBookings);
         }
 
-        // GET: /Booking/Create
+        // GET: /Booking/Create?venueId=5&slotId=12
         [Authorize(Roles = "Admin,Event Host")]
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create(int? venueId, int? slotId)
         {
             var venues = await _venueService.GetAllVenuesAsync();
-            ViewBag.VenueId = new SelectList(venues, "Id", "Name");
-            return View();
+
+            var booking = new Booking();
+            if (venueId.HasValue)
+            {
+                booking.VenueId = venueId.Value;
+                var targetedVenue = await _venueService.GetVenueByIdAsync(venueId.Value);
+                if (targetedVenue != null)
+                {
+                    booking.TotalPrice = targetedVenue.PricePerSlot;
+                }
+            }
+            if (slotId.HasValue)
+            {
+                booking.SlotId = slotId.Value;
+            }
+
+            ViewBag.VenueId = new SelectList(venues, "Id", "Name", booking.VenueId);
+
+            // Fetch slots for this specific venue to display options if needed
+            var slots = venueId.HasValue ? await _slotService.GetSlotsByVenueIdAsync(venueId.Value) : new List<Slot>();
+            ViewBag.SlotsList = slots;
+
+            return View(booking);
         }
 
         // POST: /Booking/Create

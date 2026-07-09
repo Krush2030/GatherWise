@@ -92,11 +92,7 @@
                                 <i class="bi bi-building me-1"></i> Venues
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-secondary fw-medium px-3" asp-area="" asp-controller="Slot" asp-action="Index">
-                                <i class="bi bi-calendar3 me-1"></i> Slots
-                            </a>
-                        </li>
+                        
                         <li class="nav-item">
                             <a class="nav-link text-secondary fw-medium px-3" asp-area="" asp-controller="Booking" asp-action="Index">
                                 <i class="bi bi-journal-bookmark-fill me-1"></i> Bookings
@@ -135,12 +131,16 @@
                         @if (SignInManager.IsSignedIn(User))
                         {
                             var currentUser = await UserManager.GetUserAsync(User);
+                            
                             <li class="nav-item">
-                                <span class="badge bg-light text-dark border p-2 d-flex align-items-center gap-2 rounded-pill shadow-sm px-3">
-                                    <i class="bi bi-person-circle text-success fs-6"></i>
-                                    <span class="fw-semibold">@(currentUser?.FullName ?? User.Identity?.Name)</span>
-                                </span>
+                                <a asp-controller="Profile" asp-action="Index" class="text-decoration-none">
+                                    <span class="badge bg-light text-dark border p-2 d-flex align-items-center gap-2 rounded-pill shadow-sm px-3">
+                                        <i class="bi bi-person-circle text-success fs-6"></i>
+                                        <span class="fw-semibold">@(currentUser?.FullName ?? User.Identity?.Name)</span>
+                                    </span>
+                                </a>
                             </li>
+                            
                             <li class="nav-item">
                                 <form class="form-inline m-0" asp-controller="Account" asp-action="Logout" method="post">
                                     <button type="submit" class="btn btn-link text-secondary text-decoration-none hover-text-danger p-0 fw-medium">

@@ -27,6 +27,9 @@ namespace GatherWise.DataAccess.Repositories
                         .ThenInclude(v => v.Owner)
                 .Include(p => p.Booking)
                     .ThenInclude(b => b.EventHost)
+                .Include(p => p.Booking)
+                    .ThenInclude(b => b.BookedServices) // <-- ADDED
+                        .ThenInclude(bs => bs.VendorService) // <-- ADDED
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
@@ -37,6 +40,9 @@ namespace GatherWise.DataAccess.Repositories
                     .ThenInclude(b => b.Venue)
                 .Include(p => p.Booking)
                     .ThenInclude(b => b.Slot)
+                .Include(p => p.Booking)
+                    .ThenInclude(b => b.BookedServices) // <-- ADDED
+                        .ThenInclude(bs => bs.VendorService) // <-- ADDED
                 .Where(p => p.Booking.EventHostId == hostId)
                 .OrderByDescending(p => p.PaymentDate)
                 .ToListAsync();
@@ -49,6 +55,9 @@ namespace GatherWise.DataAccess.Repositories
                     .ThenInclude(b => b.Venue)
                 .Include(p => p.Booking)
                     .ThenInclude(b => b.Slot)
+                .Include(p => p.Booking)
+                    .ThenInclude(b => b.BookedServices) // <-- ADDED
+                        .ThenInclude(bs => bs.VendorService) // <-- ADDED
                 .Where(p => p.Booking.Venue.OwnerId == ownerId)
                 .OrderByDescending(p => p.PaymentDate)
                 .ToListAsync();

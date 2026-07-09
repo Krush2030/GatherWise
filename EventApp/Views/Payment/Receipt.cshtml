@@ -24,7 +24,7 @@
                 border: 1px solid #e0e0e0;
                 border-radius: 8px;
             }
-            /* Layout rules to isolate the document frame clean when printing */
+        
             @@media print {
                 body {
                     background-color: #ffffff;
@@ -121,17 +121,56 @@
                         </tr>
                     </thead>
                     <tbody>
+                        @{
+                            // Calculate Base Venue Cost out of the booking context slot data model
+                            decimal venueCost = Model.Booking?.Slot?.Venue?.PricePerSlot
+                                                ?? Model.Booking?.Venue?.PricePerSlot
+                                                ?? 0;
+        
+                            // Fall back safely if Model.Amount matches total invoice
+                            if (venueCost == 0 && Model.Amount > 0)
+                            {
+                                venueCost = Model.Amount;
+                            }
+
+                            decimal totalServicesCost = 0;
+                        }
+    
                         <tr>
                             <td>
                                 <strong>Venue Property Rental Charges</strong><br />
-                                <span class="text-muted small">Flat base tariff calculation metrics applied to selected block.</span>
+                                <span class="text-muted small">Flat base tariff calculation metrics applied to selected operational block.</span>
                             </td>
                             <td class="text-center text-muted">@Model.Booking?.EstimatedGuests Guests Max Cap</td>
-                            <td class="text-end fw-semibold text-dark">₹@Model.Amount.ToString("N2")</td>
+                            <td class="text-end fw-semibold text-dark">₹@venueCost.ToString("N2")</td>
                         </tr>
+
+                        @if (Model.Booking?.BookedServices != null && Model.Booking.BookedServices.Any())
+                        {
+                            @foreach (var service in Model.Booking.BookedServices)
+                            {
+                                // FIXED: Swapped .Price with .BasePrice to match Domain Model configuration
+                                var servicePrice = service.VendorService?.BasePrice ?? 0;
+                                totalServicesCost += servicePrice;
+            
+                                <tr>
+                                    <td>
+                                        <strong>✨ Service Add-on: @service.VendorService?.ServiceName</strong><br />
+                                        <span class="text-muted small">Managed external platform fulfillment line vendor asset.</span>
+                                    </td>
+                                    <td class="text-center text-muted">1 Package Units</td>
+                                    <td class="text-end fw-semibold text-dark">₹@servicePrice.ToString("N2")</td>
+                                </tr>
+                            }
+                        }
+
+                        @{
+                            decimal computedGrandTotal = venueCost + totalServicesCost;
+                            decimal displayGrandTotal = Model.Amount > computedGrandTotal ? Model.Amount : computedGrandTotal;
+                        }
                         <tr class="fs-5 table-light">
                             <td colspan="2" class="text-end fw-bold text-secondary">Grand Settlement Total:</td>
-                            <td class="text-end fw-bold text-success">₹@Model.Amount.ToString("N2")</td>
+                            <td class="text-end fw-bold text-success">₹@displayGrandTotal.ToString("N2")</td>
                         </tr>
                     </tbody>
                 </table>
@@ -171,11 +210,11 @@
 
         html2canvas(targetElement, renderOptions).then(canvas => {
         const imageUri = canvas.toDataURL("image/png");
-                    
+                            
         const virtualLink = document.createElement("a");
         virtualLink.href = imageUri;
         virtualLink.download = "Invoice_Receipt_INV_@Model.Id" + ".png";
-                    
+                            
         document.body.appendChild(virtualLink);
         virtualLink.click();
         document.body.removeChild(virtualLink);
