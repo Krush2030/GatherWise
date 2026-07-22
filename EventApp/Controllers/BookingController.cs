@@ -2,13 +2,15 @@
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using GatherWise.Domain.Entities;
+using GatherWise.Domain.Enums;
 using GatherWise.Services.Interfaces;
-using GatherWise.DataAccess.Data; // Ensure this matches your context path
+using GatherWise.DataAccess.Data;
 
 namespace GatherWise.Web.Controllers
 {
@@ -18,13 +20,13 @@ namespace GatherWise.Web.Controllers
         private readonly IBookingService _bookingService;
         private readonly IVenueService _venueService;
         private readonly ISlotService _slotService;
-        private readonly ApplicationDbContext _context; // Injected to resolve the context error
+        private readonly ApplicationDbContext _context;
 
         public BookingController(
             IBookingService bookingService,
             IVenueService venueService,
             ISlotService slotService,
-            ApplicationDbContext context) // Add context here
+            ApplicationDbContext context)
         {
             _bookingService = bookingService;
             _venueService = venueService;
@@ -76,7 +78,6 @@ namespace GatherWise.Web.Controllers
 
             ViewBag.VenueId = new SelectList(venues, "Id", "Name", booking.VenueId);
 
-            // Fetch slots for this specific venue to display options if needed
             var slots = venueId.HasValue ? await _slotService.GetSlotsByVenueIdAsync(venueId.Value) : new List<Slot>();
             ViewBag.SlotsList = slots;
 
@@ -105,10 +106,7 @@ namespace GatherWise.Web.Controllers
             {
                 try
                 {
-                    // 1. Create the base venue booking
                     await _bookingService.CreateBookingAsync(booking);
-
-                    // 2. Redirect to Vendor Services Selection right away, passing the new Booking Id!
                     return RedirectToAction(nameof(SelectServices), new { bookingId = booking.Id });
                 }
                 catch (Exception ex)
@@ -127,9 +125,16 @@ namespace GatherWise.Web.Controllers
         public async Task<JsonResult> GetAvailableSlots(int venueId)
         {
             var allSlots = await _slotService.GetSlotsByVenueIdAsync(venueId);
-            var slotData = new System.Collections.Generic.List<object>();
+            var currentDateTime = DateTime.UtcNow;
 
-            foreach (var s in allSlots)
+            var activeAvailableSlots = allSlots.Where(s =>
+                !s.IsBooked &&
+                (s.Date.Date > currentDateTime.Date ||
+                (s.Date.Date == currentDateTime.Date && s.StartTime > currentDateTime.TimeOfDay))
+            );
+
+            var slotData = new List<object>();
+            foreach (var s in activeAvailableSlots)
             {
                 slotData.Add(new
                 {
@@ -161,7 +166,29 @@ namespace GatherWise.Web.Controllers
                 return Forbid();
             }
 
-            await _bookingService.UpdateBookingStatusAsync(id, GatherWise.Domain.Enums.BookingStatus.Confirmed);
+            await _bookingService.UpdateBookingStatusAsync(id, BookingStatus.Approved);
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: /Booking/Reject/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Venue Owner")]
+        public async Task<IActionResult> Reject(int id)
+        {
+            var booking = await _bookingService.GetBookingByIdAsync(id);
+            if (booking == null)
+            {
+                return NotFound();
+            }
+
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!User.IsInRole("Admin") && booking.Venue?.OwnerId != currentUserId)
+            {
+                return Forbid();
+            }
+
+            await _bookingService.UpdateBookingStatusAsync(id, BookingStatus.Rejected);
             return RedirectToAction(nameof(Index));
         }
 
@@ -200,7 +227,6 @@ namespace GatherWise.Web.Controllers
                 return NotFound();
             }
 
-            // Successfully fetches all active vendor services via the newly injected context
             var services = await _context.VendorServices.Include(s => s.Vendor).ToListAsync();
 
             ViewBag.BookingId = bookingId;
@@ -234,7 +260,6 @@ namespace GatherWise.Web.Controllers
 
                 _context.BookingServices.Add(bookingServiceItem);
 
-                // Appends the vendor service base cost to the global reservation checkout total balance
                 booking.TotalPrice += service.BasePrice;
 
                 await _context.SaveChangesAsync();
@@ -258,6 +283,21 @@ namespace GatherWise.Web.Controllers
             {
                 return Forbid();
             }
+
+            // --- ADDED: 1-Hour Pending Workflow Logic ---
+            var currentDateTime = DateTime.UtcNow;
+            var hoursSinceBooking = (currentDateTime - detailedBooking.CreatedAt).TotalHours;
+
+            if (detailedBooking.Status == BookingStatus.PendingApproval && hoursSinceBooking >= 1)
+            {
+                ViewBag.ShowOwnerContact = true;
+                ViewBag.OwnerPhoneNumber = detailedBooking.Venue?.Owner?.PhoneNumber ?? "Contact details unavailable";
+            }
+            else
+            {
+                ViewBag.ShowOwnerContact = false;
+            }
+            // --------------------------------------------
 
             return View(detailedBooking);
         }

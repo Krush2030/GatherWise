@@ -5,6 +5,7 @@
 @{
     ViewData["Title"] = "My Reservations";
     var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var currentTime = DateTime.UtcNow;
 }
 
 <div class="container mt-4">
@@ -55,9 +56,20 @@
                     <tbody>
                         @foreach (var booking in Model)
                         {
+                            var hoursSinceBooking = (currentTime - booking.CreatedAt).TotalHours;
+                            var showContactNumber = booking.Status == BookingStatus.PendingApproval && hoursSinceBooking >= 1;
+
                             <tr>
                                 <td class="ps-4 fw-bold text-secondary">#GW-@booking.Id</td>
-                                <td class="fw-semibold text-primary">@booking.Venue?.Name</td>
+                                <td class="fw-semibold text-primary">
+                                    @booking.Venue?.Name
+                                    @if (showContactNumber)
+                                    {
+                                        <div class="mt-1 small text-danger fw-bold">
+                                            <i class="bi bi-telephone-fill"></i> Owner Contact: @(booking.Venue?.Owner?.PhoneNumber ?? "No Phone Number Provided")
+                                        </div>
+                                    }
+                                </td>
                                 <td class="small">
                                     <strong>@booking.Slot?.Date.ToString("dd-MMM-yyyy")</strong><br />
                                     <span class="text-muted">@booking.Slot?.StartTime.ToString(@"hh\:mm") - @booking.Slot?.EndTime.ToString(@"hh\:mm")</span>
@@ -65,13 +77,32 @@
                                 <td>@booking.EstimatedGuests</td>
                                 <td class="fw-bold text-success">₹@booking.TotalPrice.ToString("N2")</td>
                                 <td>
-                                    @if (booking.Status == BookingStatus.Pending)
+                                    @if (booking.Status == BookingStatus.PendingApproval)
                                     {
                                         <span class="badge rounded-pill px-3 py-2 bg-warning text-dark">Pending Approval</span>
+                                        <div class="text-muted mt-1" style="font-size: 0.75rem;">
+                                            Owner has @((1 - hoursSinceBooking) > 0 ? $"{(int)((1 - hoursSinceBooking) * 60)} mins" : "0 mins") left to accept
+                                        </div>
                                     }
-                                    else if (booking.Status == BookingStatus.Confirmed)
+                                    else if (booking.Status == BookingStatus.Approved)
                                     {
-                                        <span class="badge rounded-pill px-3 py-2 bg-success">Confirmed</span>
+                                        <span class="badge rounded-pill px-3 py-2 bg-info text-white">Approved (Unpaid)</span>
+                                        @if (booking.ApprovedAt.HasValue)
+                                        {
+                                            var hoursSinceApproval = (currentTime - booking.ApprovedAt.Value).TotalHours;
+                                            var minsRemaining = (int)((1 - hoursSinceApproval) * 60);
+                                            <div class="text-danger mt-1 fw-semibold" style="font-size: 0.75rem;">
+                                                Pay within: @(minsRemaining > 0 ? $"{minsRemaining} mins" : "Expired")
+                                            </div>
+                                        }
+                                    }
+                                    else if (booking.Status == BookingStatus.Completed)
+                                    {
+                                        <span class="badge rounded-pill px-3 py-2 bg-success">Completed (Paid)</span>
+                                    }
+                                    else if (booking.Status == BookingStatus.CancelledByTimeout)
+                                    {
+                                        <span class="badge rounded-pill px-3 py-2 bg-dark">Timed Out</span>
                                     }
                                     else
                                     {
@@ -79,22 +110,28 @@
                                     }
                                 </td>
                                 <td class="pe-4 text-end">
-                                    @if (booking.Status == BookingStatus.Pending && (User.IsInRole("Admin") || booking.Venue?.OwnerId == currentUserId))
+                                    @if (booking.Status == BookingStatus.PendingApproval && (User.IsInRole("Admin") || booking.Venue?.OwnerId == currentUserId))
                                     {
                                         <div class="d-inline-flex gap-2">
-                                            <form asp-action="Approve" asp-route-id="@booking.Id" method="post" class="d-inline">
+                                            <form asp-controller="Booking" asp-action="Approve" asp-route-id="@booking.Id" method="post" class="d-inline">
                                                 <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 shadow-sm">Approve</button>
                                             </form>
-                                            <form asp-action="Cancel" asp-route-id="@booking.Id" method="post" class="d-inline">
+                                            <form asp-controller="Booking" asp-action="Reject" asp-route-id="@booking.Id" method="post" class="d-inline">
                                                 <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">Reject</button>
                                             </form>
                                         </div>
                                     }
-                                    else if (booking.Status == BookingStatus.Pending && booking.EventHostId == currentUserId)
+                                    else if (booking.Status == BookingStatus.PendingApproval && booking.EventHostId == currentUserId)
                                     {
-                                        <form asp-action="Cancel" asp-route-id="@booking.Id" method="post" class="d-inline">
+                                        <form asp-controller="Booking" asp-action="Cancel" asp-route-id="@booking.Id" method="post" class="d-inline">
                                             <button type="submit" class="btn btn-sm btn-danger rounded-pill px-3 shadow-sm">Withdraw Request</button>
                                         </form>
+                                    }
+                                    else if (booking.Status == BookingStatus.Approved && booking.EventHostId == currentUserId)
+                                    {
+                                        <a asp-controller="Payment" asp-action="Pay" asp-route-bookingId="@booking.Id" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
+                                            <i class="bi bi-credit-card"></i> Pay Now
+                                        </a>
                                     }
                                     else
                                     {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using GatherWise.Domain.Enums;
@@ -25,9 +26,15 @@ namespace GatherWise.Domain.Entities
         [ForeignKey("Slot")]
         public int SlotId { get; set; }
 
+        // Tracks when the Booking Request was generated
         [Required(ErrorMessage = "Booking date record is required")]
         [DataType(DataType.DateTime)]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // ADDED: Tracks the exact moment the Venue Owner clicked "Approve"
+        // This establishes the starting line for the Host's 1-hour payment countdown window
+        [DataType(DataType.DateTime)]
+        public DateTime? ApprovedAt { get; set; }
 
         [Required(ErrorMessage = "Estimated guest count is required")]
         [Range(1, 50000, ErrorMessage = "Guest count must be at least 1 and within venue capacity limits")]
@@ -38,8 +45,9 @@ namespace GatherWise.Domain.Entities
         [Column(TypeName = "decimal(18, 2)")]
         public decimal TotalPrice { get; set; }
 
+        // UPDATED: Default state changed to PendingApproval
         [Required]
-        public BookingStatus Status { get; set; } = BookingStatus.Pending;
+        public BookingStatus Status { get; set; } = BookingStatus.PendingApproval;
 
         // Navigation Properties for EF Core Joins
         public ICollection<BookingService> BookedServices { get; set; } = new List<BookingService>();

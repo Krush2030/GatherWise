@@ -31,7 +31,9 @@ namespace GatherWise.DataAccess.Repositories
             return await _context.Set<Booking>()
                 .Include(b => b.Venue)
                 .Include(b => b.Slot)
-                .Where(b => b.EventHostId == hostId && b.Status == BookingStatus.Confirmed && b.Slot.Date >= DateTime.UtcNow.Date)
+                .Where(b => b.EventHostId == hostId
+                            && b.Status == BookingStatus.Approved
+                            && b.Slot.Date >= DateTime.UtcNow.Date)
                 .OrderBy(b => b.Slot.Date)
                 .ThenBy(b => b.Slot.StartTime)
                 .Take(count)
@@ -50,7 +52,7 @@ namespace GatherWise.DataAccess.Repositories
             return await _context.Set<Booking>()
                 .Include(b => b.Venue)
                 .Include(b => b.Slot)
-                .Where(b => b.Venue.OwnerId == ownerId && b.Status == BookingStatus.Pending)
+                .Where(b => b.Venue.OwnerId == ownerId && b.Status == BookingStatus.PendingApproval)
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
         }
@@ -67,7 +69,7 @@ namespace GatherWise.DataAccess.Repositories
         public async Task<IEnumerable<string>> GetPopularTimeSlotsByOwnerAsync(string ownerId, int count)
         {
             return await _context.Set<Booking>()
-                .Where(b => b.Venue.OwnerId == ownerId && b.Status == BookingStatus.Confirmed)
+                .Where(b => b.Venue.OwnerId == ownerId && b.Status == BookingStatus.Approved)
                 .GroupBy(b => new { b.Slot.StartTime, b.Slot.EndTime })
                 .OrderByDescending(g => g.Count())
                 .Select(g => $"{g.Key.StartTime:hh\\:mm} - {g.Key.EndTime:hh\\:mm} ({g.Count()} bookings)")

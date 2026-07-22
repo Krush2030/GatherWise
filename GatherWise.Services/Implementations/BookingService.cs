@@ -27,13 +27,11 @@ namespace GatherWise.Services.Implementations
             return await _bookingRepository.GetByHostIdAsync(hostId);
         }
 
-        // Renamed/Mapped properly to fulfill the 'IBookingService.GetWithDetailsByIdAsync' contract requirement
         public async Task<Booking?> GetWithDetailsByIdAsync(int id)
         {
             return await _bookingRepository.GetWithDetailsByIdAsync(id);
         }
 
-        // Keeping this alias just in case your controller calls it somewhere under this name signature
         public async Task<Booking?> GetBookingByIdAsync(int id)
         {
             return await _bookingRepository.GetWithDetailsByIdAsync(id);
@@ -44,22 +42,22 @@ namespace GatherWise.Services.Implementations
             using var transaction = await _bookingRepository.BeginTransactionAsync();
             try
             {
-                // 1. Check slot availability
                 var slot = await _bookingRepository.GetSlotByIdAsync(booking.SlotId);
                 if (slot == null || slot.IsBooked)
                 {
                     throw new InvalidOperationException("The requested slot is either invalid or already reserved.");
                 }
 
+                // Temporary block the slot as pending
                 slot.IsBooked = true;
 
-                // 2. Insert Base Booking record
                 booking.CreatedAt = DateTime.UtcNow;
-                booking.Status = BookingStatus.Pending;
+                booking.Status = BookingStatus.PendingApproval; // Enforced starting state
+                booking.ApprovedAt = null;
+
                 await _bookingRepository.AddAsync(booking);
                 await _bookingRepository.SaveChangesAsync();
 
-                // 3. Automatically append initial invoice statement entry
                 var initialInvoice = new Payment
                 {
                     BookingId = booking.Id,
@@ -112,9 +110,21 @@ namespace GatherWise.Services.Implementations
             {
                 booking.Status = status;
 
-                if (status == BookingStatus.Confirmed && booking.Slot != null)
+                // When owner accepts the booking, capture the timestamp to start the 1-hour payment deadline
+                if (status == BookingStatus.Approved)
                 {
-                    booking.Slot.IsBooked = true;
+                    booking.ApprovedAt = DateTime.UtcNow;
+                    if (booking.Slot != null)
+                    {
+                        booking.Slot.IsBooked = true;
+                    }
+                }
+                else if (status == BookingStatus.Cancelled || status == BookingStatus.CancelledByTimeout || status == BookingStatus.Rejected)
+                {
+                    if (booking.Slot != null)
+                    {
+                        booking.Slot.IsBooked = false; // Release slot back to pool
+                    }
                 }
 
                 await _bookingRepository.UpdateAsync(booking);

@@ -35,8 +35,15 @@ namespace GatherWise.DataAccess.Repositories
 
         public async Task<IEnumerable<Slot>> GetAvailableSlotsAsync(int venueId, DateTime date)
         {
+            var currentDateTime = DateTime.Now;
+
             return await _context.Slots
-                .Where(s => s.VenueId == venueId && s.Date.Date == date.Date && !s.IsBooked)
+                .Where(s => s.VenueId == venueId
+                            && s.Date.Date == date.Date
+                            && !s.IsBooked
+                            // ENFORCE RULE: The slot start time must be in the future
+                            && (s.Date.Date > currentDateTime.Date ||
+                               (s.Date.Date == currentDateTime.Date && s.StartTime > currentDateTime.TimeOfDay)))
                 .Include(s => s.Venue)
                 .ToListAsync();
         }

@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,10 +12,17 @@ namespace GatherWise.Web.Controllers
     public class PaymentController : Controller
     {
         private readonly IPaymentService _paymentService;
+        private readonly IBookingService _bookingService; // Injected for updating booking status on timeout
+        private readonly ISlotService _slotService;       // Injected for releasing slots back to pool
 
-        public PaymentController(IPaymentService paymentService)
+        public PaymentController(
+            IPaymentService paymentService,
+            IBookingService bookingService,
+            ISlotService slotService)
         {
             _paymentService = paymentService;
+            _bookingService = bookingService;
+            _slotService = slotService;
         }
 
         // GET: /Payment
@@ -81,6 +89,41 @@ namespace GatherWise.Web.Controllers
                 return Forbid();
             }
 
+            var booking = payment.Booking;
+            if (booking == null)
+            {
+                return NotFound("Associated booking details could not be found.");
+            }
+
+            // --- 1-HOUR PAYMENT CUT-OFF WORKFLOW ---
+            if (booking.Status != BookingStatus.Approved || !booking.ApprovedAt.HasValue)
+            {
+                ModelState.AddModelError("", "This reservation is not in an approved state ready for payment.");
+                return View(payment);
+            }
+
+            // Evaluate if event host has missed the 60-minute window (using UTC to align with db system)
+            var timeElapsedSinceApproval = DateTime.UtcNow - booking.ApprovedAt.Value;
+
+            if (timeElapsedSinceApproval.TotalHours > 1)
+            {
+                // Timeout exceeded. Release the structural slot back into the public pool!
+                booking.Status = BookingStatus.CancelledByTimeout;
+
+                if (booking.Slot != null)
+                {
+                    booking.Slot.IsBooked = false; // Make slot available again
+                    await _slotService.UpdateSlotAsync(booking.Slot);
+                }
+
+                await _bookingService.UpdateBookingStatusAsync(booking.Id, BookingStatus.CancelledByTimeout);
+
+                TempData["ErrorMessage"] = "The 1-hour payment window for this reservation has expired. The reservation has been canceled and the slot has been released.";
+                return RedirectToAction("Index", "Venue");
+            }
+            // ----------------------------------------
+
+            // Proceed with payment execution logic safely...
             var success = await _paymentService.ProcessPaymentAsync(id, paymentMethod);
             if (success)
             {
