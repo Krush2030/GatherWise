@@ -21,48 +21,106 @@
     <link rel="stylesheet" href="~/EventApp.styles.css" asp-append-version="true" />
 
     <style>
-            body {
-                font-family: 'Plus Jakarta Sans', sans-serif;
-                background-color: #f8f9fa;
-            }
-            /* Sticky footer adjustments */
-            body, html {
-                height: 100%;
-            }
+       
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f9fafb;
+            color: #1f2937;
+        }
 
-            .wrapper {
-                min-height: 100%;
-                margin-bottom: -60px; /* Equal to footer height */
-                padding-bottom: 60px;
-            }
+        /* Modernized Header & Glass Navigation */
+        .navbar-custom {
+            background: rgba(255, 255, 255, 0.8) !important;
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border-bottom: 1px solid rgba(243, 244, 246, 1) !important;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.02);
+            transition: all 0.3s ease;
+        }
 
-            .footer {
-                height: 60px;
-            }
-            /* Modernized active link state transitions */
-            .nav-link {
-                position: relative;
-                transition: color 0.25s ease;
-            }
+        /* Smooth Interactive Nav Underlines */
+        .nav-link {
+            position: relative;
+            color: #4b5563 !important;
+            transition: color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 0.925rem;
+        }
 
-                .nav-link:hover {
-                    color: #198754 !important;
-                }
-            /* Glassmorphism shadow container styling */
-            .navbar-custom {
-                background-color: rgba(255, 255, 255, 0.95) !important;
-                backdrop-filter: blur(10px);
-                box-shadow: 0 2px 15px rgba(0, 0, 0, 0.04);
-            }
+        .nav-link:hover {
+            color: #198754 !important;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 4px;
+            left: 1rem;
+            background-color: #198754;
+            transition: width 0.25s ease;
+        }
+
+        .nav-link:hover::after {
+            width: calc(100% - 2rem);
+        }
+
+        /* Active Badges and Buttons styling */
+        .profile-badge {
+            background: #ffffff;
+            border: 1px solid #e5e7eb !important;
+            transition: all 0.2s ease;
+        }
+
+        .profile-badge:hover {
+            border-color: #198754 !important;
+            background: rgba(25, 135, 84, 0.02);
+        }
+
+        .btn-logout {
+            transition: color 0.2s ease;
+        }
+        
+        .btn-logout:hover {
+            color: #dc3545 !important;
+        }
+
+        /* Modern Minimal Footer */
+        .footer-custom {
+            background-color: #ffffff;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .hover-link-success {
+            transition: color 0.2s ease;
+        }
+        .hover-link-success:hover {
+            color: #198754 !important;
+        }
+
+        /* Page entry micro-animation */
+        .animate-fade-in {
+            animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
     </style>
 </head>
 <body class="d-flex flex-column h-100">
 
     <header>
-        <nav class="navbar navbar-expand-lg navbar-light navbar-custom sticky-top border-bottom border-light py-3">
+        <nav class="navbar navbar-expand-lg navbar-light navbar-custom sticky-top py-3">
             <div class="container">
-                <a class="navbar-brand fw-bold text-success d-flex align-items-center gap-2 fs-4" asp-area="" asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-box-seam-fill text-success fs-3"></i> GatherWise
+                <!-- Premium Brand Identity Logomark -->
+                <a class="navbar-brand fw-bold text-success d-flex align-items-center gap-2 fs-4 tracking-tight" asp-area="" asp-controller="Home" asp-action="Index">
+                    <div class="bg-success bg-opacity-10 p-2 rounded-3 d-flex align-items-center justify-content-center">
+                        <i class="bi bi-box-seam-fill text-success fs-4"></i>
+                    </div>
+                    <span>GatherWise</span>
                 </a>
                 
                 <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMainContent" aria-controls="navbarMainContent"
@@ -71,9 +129,10 @@
                 </button>
                 
                 <div class="navbar-collapse collapse" id="navbarMainContent">
+                    <!-- Central Contextual Pipelines Link Matrix -->
                     <ul class="navbar-nav mx-auto gap-1">
                         <li class="nav-item">
-                            <a class="nav-link text-secondary fw-medium px-3" asp-area="" asp-controller="Home" asp-action="Index">
+                            <a class="nav-link fw-medium px-3 py-2" asp-area="" asp-controller="Home" asp-action="Index">
                                 <i class="bi bi-house-door me-1"></i> Home
                             </a>
                         </li>
@@ -81,52 +140,51 @@
                         @if (SignInManager.IsSignedIn(User))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-success fw-semibold px-3" asp-area="" asp-controller="Dashboard" asp-action="Index">
+                                <a class="nav-link text-success fw-semibold px-3 py-2" asp-area="" asp-controller="Dashboard" asp-action="Index">
                                     <i class="bi bi-speedometer2 me-1"></i> Dashboard
                                 </a>
                             </li>
                         }
 
                         <li class="nav-item">
-                            <a class="nav-link text-secondary fw-medium px-3" asp-area="" asp-controller="Venue" asp-action="Index">
+                            <a class="nav-link fw-medium px-3 py-2" asp-area="" asp-controller="Venue" asp-action="Index">
                                 <i class="bi bi-building me-1"></i> Venues
                             </a>
                         </li>
                         
                         <li class="nav-item">
-                            <a class="nav-link text-secondary fw-medium px-3" asp-area="" asp-controller="Booking" asp-action="Index">
+                            <a class="nav-link fw-medium px-3 py-2" asp-area="" asp-controller="Booking" asp-action="Index">
                                 <i class="bi bi-journal-bookmark-fill me-1"></i> Bookings
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-secondary fw-medium px-3" asp-area="" asp-controller="Payment" asp-action="Index">
+                            <a class="nav-link fw-medium px-3 py-2" asp-area="" asp-controller="Payment" asp-action="Index">
                                 <i class="bi bi-receipt-cutoff me-1"></i> Payments
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-secondary fw-medium px-3" asp-area="" asp-controller="VendorAssignment" asp-action="CustomerOverview">
-                                <i class="bi bi-people me-1"></i> Our Team
-                            </a>
-                        </li>
 
-                        @if (SignInManager.IsSignedIn(User))
+                        <!-- SECURED ROLE FILTER: Only Visible explicitly to verified Vendor Identities -->
+                        @if (SignInManager.IsSignedIn(User) && User.IsInRole("Vendor"))
                         {
-                            @if (User.IsInRole("Vendor"))
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link text-secondary fw-medium px-3" asp-area="" asp-controller="Vendor" asp-action="MyServices">
-                                        <i class="bi bi-grid-3x3-gap me-1"></i> My Services
-                                    </a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link text-secondary fw-medium px-3" asp-area="" asp-controller="Vendor" asp-action="AddService">
-                                        <i class="bi bi-patch-plus me-1"></i> Add New Service
-                                    </a>
-                                </li>
-                            }
+                            <li class="nav-item">
+                                <a class="nav-link fw-medium px-3 py-2" asp-area="" asp-controller="VendorAssignment" asp-action="CustomerOverview">
+                                    <i class="bi bi-people me-1"></i> Our Team
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link fw-medium px-3 py-2" asp-area="" asp-controller="Vendor" asp-action="MyServices">
+                                    <i class="bi bi-grid-3x3-gap me-1"></i> My Services
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link fw-medium px-3 py-2" asp-area="" asp-controller="Vendor" asp-action="AddService">
+                                    <i class="bi bi-patch-plus me-1"></i> Add Service
+                                </a>
+                            </li>
                         }
                     </ul>
 
+                    <!-- Authentication Call-To-Action Framework Elements -->
                     <ul class="navbar-nav align-items-center gap-3">
                         @if (SignInManager.IsSignedIn(User))
                         {
@@ -134,17 +192,17 @@
                             
                             <li class="nav-item">
                                 <a asp-controller="Profile" asp-action="Index" class="text-decoration-none">
-                                    <span class="badge bg-light text-dark border p-2 d-flex align-items-center gap-2 rounded-pill shadow-sm px-3">
+                                    <span class="badge profile-badge text-dark p-2 d-flex align-items-center gap-2 rounded-pill shadow-sm px-3">
                                         <i class="bi bi-person-circle text-success fs-6"></i>
-                                        <span class="fw-semibold">@(currentUser?.FullName ?? User.Identity?.Name)</span>
+                                        <span class="fw-semibold text-secondary">@(currentUser?.FullName ?? User.Identity?.Name)</span>
                                     </span>
                                 </a>
                             </li>
                             
                             <li class="nav-item">
                                 <form class="form-inline m-0" asp-controller="Account" asp-action="Logout" method="post">
-                                    <button type="submit" class="btn btn-link text-secondary text-decoration-none hover-text-danger p-0 fw-medium">
-                                        <i class="bi bi-box-arrow-right me-1 text-danger"></i> Logout
+                                    <button type="submit" class="btn btn-link text-secondary text-decoration-none btn-logout p-0 fw-medium d-flex align-items-center gap-1">
+                                        <i class="bi bi-box-arrow-right text-danger"></i> Logout
                                     </button>
                                 </form>
                             </li>
@@ -166,19 +224,21 @@
         </nav>
     </header>
 
+    <!-- Main Dynamic Slot Render Container -->
     <div class="container my-5 flex-shrink-0">
         <main role="main" class="pb-5 animate-fade-in">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="footer mt-auto py-3 bg-white border-top">
+    <!-- Clean, High-Contrast Minimalist Footer -->
+    <footer class="footer mt-auto py-4 footer-custom">
         <div class="container text-center text-md-between d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
             <span class="text-muted small">&copy; 2026 <span class="text-success fw-semibold">GatherWise</span>. All rights reserved.</span>
-            <div class="d-flex gap-3">
-                <a asp-area="" asp-controller="Home" asp-action="Privacy" class="text-muted small text-decoration-none hover-text-success">Privacy Policy</a>
-                <span class="text-muted small">|</span>
-                <span class="text-muted small">Smart Operational Platform</span>
+            <div class="d-flex align-items-center gap-3">
+                <a asp-area="" asp-controller="Home" asp-action="Privacy" class="text-muted small text-decoration-none hover-link-success">Privacy Policy</a>
+                <span class="text-muted opacity-25 small">|</span>
+                <span class="text-muted small d-flex align-items-center gap-1"><i class="bi bi-shield-lock-fill text-success opacity-75"></i> Smart Operational Platform</span>
             </div>
         </div>
     </footer>

@@ -1,4 +1,7 @@
-﻿using System.Security.Claims;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -7,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using GatherWise.DataAccess.Data;
 using GatherWise.Domain.Entities;
 using GatherWise.Domain.ViewModels;
+using GatherWise.Domain.Enums; // Added to evaluate BookingStatus
 
 namespace GatherWise.Web.Controllers
 {
@@ -37,19 +41,57 @@ namespace GatherWise.Web.Controllers
             {
                 Id = user.Id,
                 Email = user.Email ?? string.Empty,
-                FullName = user.FullName, // Assuming FullName is a property on your ApplicationUser
+                FullName = user.FullName,
                 PhoneNumber = user.PhoneNumber ?? string.Empty,
                 CurrentRole = primaryRole
             };
 
-            // If Vendor, pull their business profile details
-            if (primaryRole == "Vendor")
+            // ---- Role-Driven Dashboard Aggregation Pipeline ----
+            if (primaryRole == "Event Host")
             {
-                var vendorProfile = await _context.Vendors.FirstOrDefaultAsync(v => v.OwnerId == userId);
+                // FIXED: Using exact schema structural mapping 'EventHostId'
+                var hostBookingsQuery = _context.Set<Booking>()
+                    .Where(b => b.EventHostId == userId);
+
+                model.TotalBookingsCount = await hostBookingsQuery.CountAsync();
+
+                // FIXED: Using exact schema mapping 'TotalPrice' and evaluating via 'BookingStatus.Confirmed' or 'Paid'
+                // Note: Adjust the status mapping if your exact enum naming differs (e.g., BookingStatus.Paid)
+                model.TotalRevenueOrExpenditure = await hostBookingsQuery
+                    .Where(b => b.Status == BookingStatus.Approved || b.Status.ToString() == "Paid")
+                    .SumAsync(b => b.TotalPrice);
+            }
+            else if (primaryRole == "Venue Owner")
+            {
+                // Pull Top Venues mapped to this specific user context
+                model.TopVenues = await _context.Venues
+                    .Where(v => v.OwnerId == userId)
+                    .Take(3)
+                    .ToListAsync();
+
+                model.TotalActiveListingsCount = await _context.Venues.CountAsync(v => v.OwnerId == userId);
+
+                // Populate summary statistics from bookings matching owner venues
+                model.TotalBookingsCount = await _context.Set<Booking>()
+                    .CountAsync(b => b.Venue != null && b.Venue.OwnerId == userId);
+            }
+            else if (primaryRole == "Vendor")
+            {
+                var vendorProfile = await _context.Vendors
+                    .Include(v => v.Services)
+                    .FirstOrDefaultAsync(v => v.OwnerId == userId);
+
                 if (vendorProfile != null)
                 {
                     model.BusinessName = vendorProfile.BusinessName;
                     model.ContactName = vendorProfile.ContactName;
+
+                    model.TopServices = vendorProfile.Services.Take(3).ToList();
+                    model.TotalActiveListingsCount = vendorProfile.Services.Count;
+
+                    // FIXED: Traversed the intermediate junction table tracking ('BookingService') to count bookings
+                    model.TotalBookingsCount = await _context.Set<BookingService>()
+                        .CountAsync(bs => bs.VendorService != null && bs.VendorService.VendorId == vendorProfile.Id);
                 }
             }
 
@@ -64,16 +106,16 @@ namespace GatherWise.Web.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (model.Id != userId) return Forbid();
 
-            // Strip out Identity validation for Email to prevent spoofing modifications
             ModelState.Remove("Email");
             ModelState.Remove("CurrentRole");
+            ModelState.Remove("TopVenues");
+            ModelState.Remove("TopServices");
 
             if (!ModelState.IsValid) return View("Index", model);
 
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null) return NotFound();
 
-            // 1. Update core ApplicationUser fields
             user.FullName = model.FullName;
             user.PhoneNumber = model.PhoneNumber;
 
@@ -87,7 +129,6 @@ namespace GatherWise.Web.Controllers
                 return View("Index", model);
             }
 
-            // 2. Update role-specific databases if applicable
             if (User.IsInRole("Vendor"))
             {
                 var vendorProfile = await _context.Vendors.FirstOrDefaultAsync(v => v.OwnerId == userId);
@@ -95,7 +136,7 @@ namespace GatherWise.Web.Controllers
                 {
                     vendorProfile.BusinessName = model.BusinessName ?? string.Empty;
                     vendorProfile.ContactName = model.ContactName ?? model.FullName;
-                    vendorProfile.Phone = model.PhoneNumber; // Keep synced
+                    vendorProfile.Phone = model.PhoneNumber;
 
                     _context.Vendors.Update(vendorProfile);
                     await _context.SaveChangesAsync();

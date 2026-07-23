@@ -3,68 +3,127 @@
     ViewData["Title"] = "Platform Execution Dashboard";
 }
 
-<div class="container my-5">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4 pb-3 border-bottom">
+<style>
+    /* Premium Visual Enhancements */
+    .dashboard-card {
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    }
+    .dashboard-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.075) !important;
+    }
+    .icon-shape {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+    }
+    .table-hover tbody tr {
+        transition: background-color 0.15s ease;
+    }
+    .animate-pulse {
+        animation: pulse 2s infinite;
+    }
+    @@keyframes pulse {
+        0% { opacity: 0.6; }
+        50% { opacity: 1; }
+        100% { opacity: 0.6; }
+    }
+    .metric-label {
+        letter-spacing: 0.5px;
+        font-size: 0.75rem;
+    }
+</style>
+
+<div class="container py-5">
+    <!-- Top Workspace Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-5 pb-4 border-bottom">
         <div>
-            <h2 class="fw-bold text-dark mb-1"><i class="bi bi-speedometer2 me-2 text-success"></i>Systemic Overview Workspace</h2>
-            <p class="text-muted small mb-0">Welcome back! Accessing secure workspace indicators as: <strong class="text-success text-uppercase">@Model.ActiveUserRole</strong></p>
+            <span class="text-uppercase tracking-wider text-muted fw-bold small mb-1 d-block">System Workspace</span>
+            <h2 class="fw-black text-dark mb-1 d-flex align-items-center">
+                <i class="bi bi-grid-1x2-fill me-3 text-success"></i>Systemic Overview Matrix
+            </h2>
+            <p class="text-muted small mb-0">
+                Securely authenticated as: 
+                <span class="badge bg-dark text-white font-monospace ms-1 px-2 py-1">@Model.ActiveUserRole</span>
+            </p>
         </div>
         <div>
-            <span class="badge bg-success bg-opacity-10 text-success p-2 px-3 rounded-pill border border-success border-opacity-20 fs-6">
-                <i class="bi bi-shield-check me-1 animate-pulse"></i> Live Analytics Matrix
-            </span>
+            <div class="badge bg-success bg-opacity-10 text-success p-2 px-3 rounded-pill border border-success border-opacity-20 d-flex align-items-center gap-2 fs-7 fw-semibold">
+                <span class="d-inline-block bg-success rounded-circle animate-pulse" style="width: 8px; height: 8px;"></span>
+                Live Analytics Stream
+            </div>
         </div>
     </div>
 
+    @* ========================================== *@
+    @*           EVENT HOST DASHBOARD             *@
+    @* ========================================== *@
     @if (Model.ActiveUserRole == "Event Host")
     {
+        <!-- Metric Cards Grid -->
         <div class="row g-4 mb-5">
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm border-0 bg-success bg-opacity-10 text-success p-4 rounded-3">
-                    <div class="d-flex justify-content-between align-items-center">
+            <div class="col-12 col-sm-6 col-xl-4">
+                <div class="card dashboard-card h-100 shadow-sm rounded-4 p-4 bg-white">
+                    <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <span class="text-uppercase small fw-bold tracking-wider d-block mb-1 text-success-emphasis">Total Financial Outlay</span>
-                            <h2 class="fw-bold mb-0">₹@Model.TotalSpent.ToString("N2")</h2>
+                            <span class="text-muted text-uppercase fw-bold metric-label d-block mb-1">Total Outlay</span>
+                            <h2 class="fw-bold text-dark mb-0">₹@Model.TotalSpent.ToString("N2")</h2>
                         </div>
-                        <div class="fs-1 text-success opacity-50"><i class="bi bi-wallet2"></i></div>
+                        <div class="icon-shape bg-success bg-opacity-10 text-success fs-4">
+                            <i class="bi bi-wallet2"></i>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm border-0 bg-primary bg-opacity-10 text-primary p-4 rounded-3">
-                    <div class="d-flex justify-content-between align-items-center">
+            <div class="col-12 col-sm-6 col-xl-4">
+                <div class="card dashboard-card h-100 shadow-sm rounded-4 p-4 bg-white">
+                    <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <span class="text-uppercase small fw-bold tracking-wider d-block mb-1 text-primary-emphasis">Confirmed Bookings</span>
-                            <h2 class="fw-bold mb-0">@Model.UpcomingReservations.Count</h2>
+                            <span class="text-muted text-uppercase fw-bold metric-label d-block mb-1">Confirmed Slots</span>
+                            <h2 class="fw-bold text-dark mb-0">@Model.UpcomingReservations.Count</h2>
                         </div>
-                        <div class="fs-1 text-primary opacity-50"><i class="bi bi-calendar-check"></i></div>
+                        <div class="icon-shape bg-primary bg-opacity-10 text-primary fs-4">
+                            <i class="bi bi-calendar-check-fill"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="card shadow-sm border-0 rounded-3 mb-5">
-            <div class="card-header bg-white p-4 border-bottom">
-                <h5 class="fw-bold text-dark mb-0"><i class="bi bi-calendar3 me-2 text-primary"></i>Your Upcoming Booking Reservations</h5>
+        <!-- Ledger Table Card -->
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
+            <div class="card-header bg-white p-4 border-bottom d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="icon-shape bg-light text-primary fs-5" style="width: 36px; height: 36px; border-radius: 8px;">
+                        <i class="bi bi-calendar3"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-0">Upcoming Bookings Ledger</h5>
+                </div>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light text-secondary small text-uppercase">
+                        <thead class="table-light text-muted small text-uppercase font-monospace border-bottom">
                             <tr>
-                                <th class="ps-4">Booking Ref</th>
-                                <th>Venue Details</th>
-                                <th>Execution Window</th>
-                                <th class="text-end pe-4">Total Price</th>
+                                <th class="ps-4 py-3">Ref ID</th>
+                                <th class="py-3">Property Mapping</th>
+                                <th class="py-3">Time Window</th>
+                                <th class="text-end pe-4 py-3">Total Cost</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="border-top-0">
                             @if (!Model.UpcomingReservations.Any())
                             {
                                 <tr>
                                     <td colspan="4" class="text-center text-muted py-5">
-                                        <i class="bi bi-calendar-x fs-2 d-block mb-2 text-secondary"></i>
-                                        No active upcoming reservations found.
+                                        <div class="py-4">
+                                            <i class="bi bi-calendar-x fs-1 d-block mb-3 text-muted opacity-50"></i>
+                                            <p class="fw-medium mb-0">No active operational upcoming reservations mapped.</p>
+                                        </div>
                                     </td>
                                 </tr>
                             }
@@ -75,12 +134,14 @@
                                     <tr>
                                         <td class="ps-4 font-monospace text-primary fw-bold">#GW-@booking.Id</td>
                                         <td>
-                                            <strong class="text-dark d-block">@booking.Venue?.Name</strong>
-                                            <span class="text-muted small"><i class="bi bi-geo-alt me-1"></i>@booking.Venue?.Location</span>
+                                            <span class="fw-semibold text-dark d-block mb-0">@booking.Venue?.Name</span>
+                                            <span class="text-muted small d-inline-flex align-items-center gap-1">
+                                                <i class="bi bi-geo-alt-fill text-muted opacity-70"></i>@booking.Venue?.Location
+                                            </span>
                                         </td>
                                         <td>
-                                            <span class="d-block text-dark fw-semibold">@booking.Slot?.Date.ToString("dd-MMM-yyyy")</span>
-                                            <span class="text-muted small">@booking.Slot?.StartTime.ToString(@"hh\:mm") - @booking.Slot?.EndTime.ToString(@"hh\:mm")</span>
+                                            <span class="d-block text-dark fw-medium">@booking.Slot?.Date.ToString("dd MMM yyyy")</span>
+                                            <span class="text-muted small font-monospace">@booking.Slot?.StartTime.ToString(@"hh\:mm") - @booking.Slot?.EndTime.ToString(@"hh\:mm")</span>
                                         </td>
                                         <td class="text-end pe-4 fw-bold text-success">₹@booking.TotalPrice.ToString("N2")</td>
                                     </tr>
@@ -92,83 +153,105 @@
             </div>
         </div>
     }
+    @* ========================================== *@
+    @*           VENUE OWNER DASHBOARD            *@
+    @* ========================================== *@
     else if (Model.ActiveUserRole == "Venue Owner")
     {
+        <!-- Metric Cards Grid -->
         <div class="row g-4 mb-5">
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm border-0 bg-primary bg-opacity-10 text-primary p-4 rounded-3">
-                    <div class="d-flex justify-content-between align-items-center">
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="card dashboard-card h-100 shadow-sm rounded-4 p-4 bg-white">
+                    <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <span class="text-uppercase small fw-bold tracking-wider d-block mb-1 text-primary-emphasis">Total Gross Earnings</span>
-                            <h2 class="fw-bold mb-0">₹@Model.TotalEarnings.ToString("N2")</h2>
+                            <span class="text-muted text-uppercase fw-bold metric-label d-block mb-1">Gross Yield</span>
+                            <h2 class="fw-bold text-dark mb-0">₹@Model.TotalEarnings.ToString("N2")</h2>
                         </div>
-                        <div class="fs-1 text-primary opacity-50"><i class="bi bi-cash-stack"></i></div>
+                        <div class="icon-shape bg-primary bg-opacity-10 text-primary fs-4">
+                            <i class="bi bi-cash-stack"></i>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm border-0 bg-info bg-opacity-10 text-info p-4 rounded-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <span class="text-uppercase small fw-bold tracking-wider d-block mb-1 text-info-emphasis">Venue Occupancy Rate</span>
-                            <h2 class="fw-bold mb-1">@Model.VenueOccupancyRate.ToString("F1")%</h2>
-                            <div class="progress mt-2" style="height: 6px; width: 150px;">
-                                <div class="progress-bar bg-info" role="progressbar" style="width: @Model.VenueOccupancyRate%" aria-valuenow="@Model.VenueOccupancyRate" aria-valuemin="0" aria-valuemax="100"></div>
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="card dashboard-card h-100 shadow-sm rounded-4 p-4 bg-white">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="w-100">
+                            <span class="text-muted text-uppercase fw-bold metric-label d-block mb-1">Utilization Capacity</span>
+                            <h2 class="fw-bold text-dark mb-1">@Model.VenueOccupancyRate.ToString("F1")%</h2>
+                            <div class="progress mt-2 bg-light" style="height: 6px; border-radius: 4px;">
+                                <div class="progress-bar bg-info rounded-pill" role="progressbar" style="width: @Model.VenueOccupancyRate%" aria-valuenow="@Model.VenueOccupancyRate" aria-valuemin="0" aria-valuemax="100"></div>
                             </div>
                         </div>
-                        <div class="fs-1 text-info opacity-50"><i class="bi bi-pie-chart"></i></div>
+                        <div class="icon-shape bg-info bg-opacity-10 text-info fs-4 ms-3 flex-shrink-0">
+                            <i class="bi bi-pie-chart-fill"></i>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card h-100 shadow-sm border-0 bg-warning bg-opacity-10 text-warning p-4 rounded-3">
-                    <div class="d-flex justify-content-between align-items-center">
+            <div class="col-12 col-xl-4">
+                <div class="card dashboard-card h-100 shadow-sm rounded-4 p-4 bg-white">
+                    <div class="d-flex align-items-start justify-content-between">
                         <div>
-                            <span class="text-uppercase small fw-bold tracking-wider d-block mb-1 text-warning-emphasis">Popular Time Slots</span>
-                            <ul class="list-unstyled mb-0 small text-warning-emphasis fw-semibold">
+                            <span class="text-muted text-uppercase fw-bold metric-label d-block mb-2">High-Velocity Slots</span>
+                            <div class="d-flex flex-wrap gap-2">
                                 @if (!Model.PopularTimeSlots.Any())
                                 {
-                                    <li>Data compiling...</li>
+                                    <span class="text-muted small italic">Processing logs...</span>
                                 }
                                 else
                                 {
                                     @foreach (var slot in Model.PopularTimeSlots)
                                     {
-                                        <li><i class="bi bi-star-fill me-1 small"></i> @slot</li>
+                                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-20 rounded-2 p-2 fw-semibold fs-7">
+                                            <i class="bi bi-lightning-charge-fill me-1"></i>@slot
+                                        </span>
                                     }
                                 }
-                            </ul>
+                            </div>
                         </div>
-                        <div class="fs-1 text-warning opacity-50"><i class="bi bi-graph-up-arrow"></i></div>
+                        <div class="icon-shape bg-warning bg-opacity-10 text-warning fs-4 flex-shrink-0">
+                            <i class="bi bi-graph-up-arrow"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="card shadow-sm border-0 rounded-3">
-            <div class="card-header bg-white p-4 border-bottom d-flex justify-content-between align-items-center">
-                <h5 class="fw-bold text-dark mb-0"><i class="bi bi-inboxes me-2 text-warning"></i>Incoming Requests Ledger</h5>
-                <span class="badge bg-warning text-dark px-3 rounded-pill">Pending Approval: @Model.IncomingRequests.Count</span>
+        <!-- Ledger Table Card -->
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
+            <div class="card-header bg-white p-4 border-bottom d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="icon-shape bg-light text-warning fs-5" style="width: 36px; height: 36px; border-radius: 8px;">
+                        <i class="bi bi-inboxes-fill"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-0">Incoming Pipeline Ledger</h5>
+                </div>
+                <span class="badge bg-light text-dark border p-2 px-3 rounded-pill fw-medium font-monospace">
+                    Pipeline Load: @Model.IncomingRequests.Count
+                </span>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light text-secondary small text-uppercase">
+                        <thead class="table-light text-muted small text-uppercase font-monospace border-bottom">
                             <tr>
-                                <th class="ps-4">Registry ID</th>
-                                <th>Target Property</th>
-                                <th>Schedule Window</th>
-                                <th>Metrics</th>
-                                <th class="text-end pe-4">Systemic Actions</th>
+                                <th class="ps-4 py-3">Registry ID</th>
+                                <th class="py-3">Target Asset</th>
+                                <th class="py-3">Requested Window</th>
+                                <th class="py-3">Load Allocations</th>
+                                <th class="text-end pe-4 py-3">State Action Matrix</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="border-top-0">
                             @if (!Model.IncomingRequests.Any())
                             {
                                 <tr>
                                     <td colspan="5" class="text-center text-muted py-5">
-                                        <i class="bi bi-check-circle fs-2 d-block mb-2 text-success"></i>
-                                        All set! No pending operational confirmation lines remain.
+                                        <div class="py-4">
+                                            <i class="bi bi-check-all fs-1 d-block mb-2 text-success opacity-75"></i>
+                                            <p class="fw-medium mb-0">Pipeline clear. No unresolved orchestration frames pending.</p>
+                                        </div>
                                     </td>
                                 </tr>
                             }
@@ -178,21 +261,29 @@
                                 {
                                     <tr>
                                         <td class="ps-4 font-monospace text-secondary fw-bold">#GW-@request.Id</td>
-                                        <td><strong class="text-dark">@request.Venue?.Name</strong></td>
+                                        <td><span class="fw-semibold text-dark">@request.Venue?.Name</span></td>
                                         <td>
-                                            <span class="d-block text-dark fw-semibold">@request.Slot?.Date.ToString("dd-MMM-yyyy")</span>
-                                            <span class="text-muted small">@request.Slot?.StartTime.ToString(@"hh\:mm") - @request.Slot?.EndTime.ToString(@"hh\:mm")</span>
+                                            <span class="d-block text-dark fw-medium">@request.Slot?.Date.ToString("dd MMM yyyy")</span>
+                                            <span class="text-muted small font-monospace">@request.Slot?.StartTime.ToString(@"hh\:mm") - @request.Slot?.EndTime.ToString(@"hh\:mm")</span>
                                         </td>
-                                        <td><span class="text-muted small"><i class="bi bi-people me-1"></i>@request.EstimatedGuests Max Cap</span></td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border rounded-2 px-2 py-1 fs-7 fw-normal">
+                                                <i class="bi bi-people-fill text-muted me-1"></i>@request.EstimatedGuests Max Cap
+                                            </span>
+                                        </td>
                                         <td class="text-end pe-4">
                                             <div class="d-flex gap-2 justify-content-end">
-                                                <form asp-controller="Booking" asp-action="Approve" asp-route-id="@request.Id" method="post">
+                                                <form asp-controller="Booking" asp-action="Approve" asp-route-id="@request.Id" method="post" class="m-0">
                                                     @Html.AntiForgeryToken()
-                                                    <button type="submit" class="btn btn-sm btn-success rounded-pill px-3"><i class="bi bi-check2 me-1"></i>Approve</button>
+                                                    <button type="submit" class="btn btn-sm btn-success px-3 rounded-3 fw-medium d-inline-flex align-items-center gap-1">
+                                                        <i class="bi bi-check2"></i> Approve
+                                                    </button>
                                                 </form>
-                                                <form asp-controller="Booking" asp-action="Cancel" asp-route-id="@request.Id" method="post">
+                                                <form asp-controller="Booking" asp-action="Cancel" asp-route-id="@request.Id" method="post" class="m-0">
                                                     @Html.AntiForgeryToken()
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3"><i class="bi bi-x-lg me-1"></i>Decline</button>
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger px-3 rounded-3 fw-medium d-inline-flex align-items-center gap-1">
+                                                        <i class="bi bi-x-lg"></i> Decline
+                                                    </button>
                                                 </form>
                                             </div>
                                         </td>

@@ -160,5 +160,84 @@ namespace GatherWise.Web.Controllers
 
             return $"/uploads/{subFolder}/{uniqueFileName}";
         }
+
+        // GET: /Vendor/DeleteService/{id}
+        public async Task<IActionResult> DeleteService(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            // Fetch service ensuring security scope mapping matching the current user context
+            var service = await _context.VendorServices
+                .Include(s => s.Vendor)
+                .FirstOrDefaultAsync(s => s.Id == id && (s.Vendor.OwnerId == userId || User.IsInRole("Admin")));
+
+            if (service == null)
+            {
+                return NotFound();
+            }
+
+            return View(service);
+        }
+
+        // POST: /Vendor/DeleteServiceConfirmed
+        [HttpPost, ActionName("DeleteService")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteServiceConfirmed(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var service = await _context.VendorServices
+                .Include(s => s.GalleryImages)
+                .Include(s => s.Vendor)
+                .FirstOrDefaultAsync(s => s.Id == id && (s.Vendor.OwnerId == userId || User.IsInRole("Admin")));
+
+            if (service == null)
+            {
+                return NotFound();
+            }
+
+            try
+            {
+                // 1. Physically delete the primary listing cover photo
+                if (!string.IsNullOrEmpty(service.MainPhotoPath))
+                {
+                    string mainPhotoPath = Path.Combine(_environment.WebRootPath, service.MainPhotoPath.TrimStart('/'));
+                    if (System.IO.File.Exists(mainPhotoPath))
+                    {
+                        System.IO.File.Delete(mainPhotoPath);
+                    }
+                }
+
+                // 2. Physically loop through and delete gallery image assets 
+                if (service.GalleryImages != null && service.GalleryImages.Any())
+                {
+                    foreach (var img in service.GalleryImages)
+                    {
+                        string imgPath = Path.Combine(_environment.WebRootPath, img.ImagePath.TrimStart('/'));
+                        if (System.IO.File.Exists(imgPath))
+                        {
+                            System.IO.File.Delete(imgPath);
+                        }
+                    }
+                }
+
+                // 3. Remove entry states from tracking context structures
+                _context.VendorServices.Remove(service);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                // Add logging or model validation exception overrides if needed
+                ModelState.AddModelError(string.Empty, "An error occurred while cleaning disk storage allocation records.");
+                return View(service);
+            }
+
+            return RedirectToAction(nameof(MyServices));
+        }
     }
 }

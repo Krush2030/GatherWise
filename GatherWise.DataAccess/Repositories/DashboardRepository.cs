@@ -49,10 +49,41 @@ namespace GatherWise.DataAccess.Repositories
 
         public async Task<IEnumerable<Booking>> GetIncomingPendingRequestsByOwnerAsync(string ownerId)
         {
-            return await _context.Set<Booking>()
+            // Define the cutoff time (1 hour ago from current UTC execution time)
+            var thresholdTime = DateTime.UtcNow.AddHours(-1);
+
+            // 1. Fetch expired requests that are still marked as PendingApproval
+            var expiredRequests = await _context.Bookings // Can use _context.Bookings or _context.Set<Booking>()
+                .Include(b => b.Slot)
+                .Where(b => b.Venue.OwnerId == ownerId
+                            && b.Status == BookingStatus.PendingApproval
+                            && b.CreatedAt <= thresholdTime)
+                .ToListAsync();
+
+            if (expiredRequests.Any())
+            {
+                foreach (var request in expiredRequests)
+                {
+                    // Transition the stale request out of the active flow
+                    request.Status = BookingStatus.Cancelled; // Or BookingStatus.Rejected depending on your Enums
+
+                    // CRITICAL: Reopen the venue slot so other clients can instantly book it
+                    if (request.Slot != null)
+                    {
+                        request.Slot.IsBooked = false;
+                    }
+                }
+
+                // Persist the changes to the database
+                await _context.SaveChangesAsync();
+            }
+
+            // 2. Return only the unexpired pending requests to the dashboard UI
+            return await _context.Bookings
                 .Include(b => b.Venue)
                 .Include(b => b.Slot)
-                .Where(b => b.Venue.OwnerId == ownerId && b.Status == BookingStatus.PendingApproval)
+                .Where(b => b.Venue.OwnerId == ownerId
+                            && b.Status == BookingStatus.PendingApproval)
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
         }

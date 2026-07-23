@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using GatherWise.Domain.Entities;
 
 namespace GatherWise.Domain.ViewModels
 {
@@ -26,6 +28,15 @@ namespace GatherWise.Domain.ViewModels
         public string? ContactName { get; set; }
 
         // Venue Owner Fields
-        public string? OwnerNotes { get; set; } // Any custom field your app uses for venue listings management
+        public string? OwnerNotes { get; set; }
+
+        // --- Asynchronous Dashboard Injection Properties ---
+        public List<Venue> TopVenues { get; set; } = new();
+        public List<VendorService> TopServices { get; set; } = new();
+
+        // Counter Metaphors for Analytics Widgets
+        public int TotalBookingsCount { get; set; }
+        public int TotalActiveListingsCount { get; set; }
+        public decimal TotalRevenueOrExpenditure { get; set; }
     }
 }

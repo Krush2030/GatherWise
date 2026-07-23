@@ -4,31 +4,61 @@
     ViewData["Title"] = Model.ServiceName + " Details";
 }
 
-<div class="container my-5">
+<style>
+    /* High-End Transition Effects */
+    .detail-card {
+        border: 1px solid rgba(0, 0, 0, 0.06) !important;
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.03) !important;
+    }
+
+    .image-hover-card {
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    }
+
+        .image-hover-card:hover {
+            transform: scale(1.04);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+        }
+
+    .glass-category-badge {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(4px);
+        color: #198754;
+        font-weight: 700;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+</style>
+
+<div class="container py-5">
+    <!-- Breadcrumb Actions -->
     <div class="mb-4">
-        <a asp-action="MyServices" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-            <i class="bi bi-arrow-left me-1"></i> Back to My Services
+        <a asp-action="MyServices" class="btn btn-link text-decoration-none text-muted p-0 d-inline-flex align-items-center gap-2 small fw-semibold">
+            <i class="bi bi-arrow-left"></i> Back to My Services
         </a>
     </div>
 
     <div class="row g-4">
         <!-- Media Assets Showcase Column -->
         <div class="col-lg-7">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
-                <div class="position-relative bg-light" style="height: 400px;">
-                    <img src="@Model.MainPhotoPath" class="w-100 h-100" style="object-fit: cover;" alt="@Model.ServiceName Main Banner" />
-                    <span class="position-absolute top-3 start-3 badge bg-success py-2 px-3 rounded-pill text-white shadow-sm">
-                        @Model.ServiceCategory
+            <div class="card border-0 rounded-4 overflow-hidden bg-white mb-4 detail-card">
+                <div class="position-relative bg-light" style="height: 420px;">
+                    <img src="@Model.MainPhotoPath" class="w-100 h-100 object-fit-cover" alt="@Model.ServiceName Main Banner" />
+                    <span class="position-absolute top-3 start-3 badge glass-category-badge py-2 px-3 rounded-pill">
+                        <i class="bi bi-tag-fill me-1"></i>@Model.ServiceCategory
                     </span>
                 </div>
             </div>
 
             <!-- Supporting Multi-Image Grid Gallery -->
-            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-images text-success me-2"></i>Service Gallery Assets</h5>
+            <h5 class="fw-bold text-dark mb-3 d-inline-flex align-items-center gap-2">
+                <i class="bi bi-images text-success"></i>Service Gallery Assets
+            </h5>
             @if (Model.GalleryImages == null || !Model.GalleryImages.Any())
             {
                 <div class="bg-light rounded-4 p-4 text-center border border-light-subtle">
-                    <p class="text-muted small mb-0 font-monospace">No additional gallery images uploaded for this service.</p>
+                    <p class="text-muted small mb-0 font-monospace">No additional gallery images uploaded for this service profile resource.</p>
                 </div>
             }
             else
@@ -37,8 +67,8 @@
                     @foreach (var img in Model.GalleryImages)
                     {
                         <div class="col-6 col-md-4">
-                            <div class="card border-0 shadow-sm rounded-3 overflow-hidden bg-light image-hover-card" style="height: 120px;">
-                                <img src="@img.ImagePath" class="w-100 h-100" style="object-fit: cover;" alt="Gallery Image" />
+                            <div class="card border-0 rounded-4 overflow-hidden bg-light image-hover-card" style="height: 130px;">
+                                <img src="@img.ImagePath" class="w-100 h-100 object-fit-cover" alt="Supporting operational asset index gallery thumbnail reference" loading="lazy" />
                             </div>
                         </div>
                     }
@@ -48,55 +78,57 @@
 
         <!-- Meta Specification Details Column -->
         <div class="col-lg-5">
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100 d-flex flex-column">
-                <span class="text-uppercase text-muted font-monospace tracking-wider small mb-1">Service Listing Information</span>
-                <h3 class="fw-bold text-dark mb-3">@Model.ServiceName</h3>
+            <div class="card border-0 rounded-4 bg-white p-4 p-md-5 h-100 d-flex flex-column detail-card">
+                <span class="text-uppercase text-muted font-monospace tracking-wider small mb-1" style="font-size: 0.7rem; font-weight: 700;">Service Listing Information</span>
+                <h2 class="fw-black text-dark mb-4">@Model.ServiceName</h2>
                 
-                <hr class="text-light my-3">
+                <hr class="text-light my-2">
 
                 <!-- Contact Block -->
-                <div class="mb-4">
-                    <h6 class="fw-bold text-secondary small text-uppercase mb-2">Vendor Details & Contact</h6>
-                    <div class="bg-light rounded-3 p-3 border border-light-subtle">
-                        <div class="d-flex align-items-center gap-3 mb-3">
-                            <div class="bg-success bg-opacity-10 text-success p-2 rounded-2"><i class="bi bi-telephone-forward"></i></div>
+                <div class="mb-5">
+                    <h6 class="fw-bold text-secondary small text-uppercase mb-3 tracking-wider">Vendor Details & Contact</h6>
+                    <div class="bg-light rounded-4 p-3 border border-light-subtle d-flex flex-column gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-success bg-opacity-10 text-success p-2 rounded-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="bi bi-telephone-forward-fill"></i>
+                            </div>
                             <div>
-                                <small class="text-muted d-block" style="font-size:0.75rem;">Service Phone</small>
+                                <small class="text-muted d-block uppercase metric-label" style="font-size:0.65rem; font-weight:700;">SERVICE PHONE</small>
                                 <span class="fw-semibold text-dark">@Model.ServicePhone</span>
                             </div>
                         </div>
                         <div class="d-flex align-items-center gap-3">
-                            <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-2"><i class="bi bi-building"></i></div>
+                            <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                <i class="bi bi-building-fill"></i>
+                            </div>
                             <div>
-                                <small class="text-muted d-block" style="font-size:0.75rem;">Business Name</small>
+                                <small class="text-muted d-block uppercase metric-label" style="font-size:0.65rem; font-weight:700;">BUSINESS ACCOUNT NAME</small>
                                 <span class="fw-semibold text-dark">@Model.Vendor?.BusinessName</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Price Metric Box -->
+                <!-- Price Metric Box & Modification Actions Container -->
                 <div class="mt-auto">
-                    <h6 class="fw-bold text-secondary small text-uppercase mb-2">Pricing Structure Matrix</h6>
-                    <div class="bg-success bg-opacity-10 rounded-4 p-4 border border-success border-opacity-10">
-                        <span class="text-success small d-block mb-1 fw-medium">Base Charge Rate</span>
-                        <h2 class="fw-bold text-success mb-2">₹@Model.BasePrice.ToString("N2")</h2>
+                    <h6 class="fw-bold text-secondary small text-uppercase mb-3 tracking-wider">Pricing Structure Matrix</h6>
+                    <div class="bg-success bg-opacity-5 rounded-4 p-4 border border-success border-opacity-10 mb-4">
+                        <span class="text-success small d-block mb-1 fw-bold font-monospace" style="font-size: 0.65rem;">BASE OPERATIONAL RATE</span>
+                        <h1 class="fw-black text-success mb-2 font-monospace">₹@Model.BasePrice.ToString("N2")</h1>
                         <div class="d-flex align-items-center gap-2 text-muted small border-top border-success border-opacity-10 pt-2 mt-2">
                             <i class="bi bi-people-fill text-success"></i>
                             <span>Applies up to a maximum capacity of <strong>@Model.PerNumberOfPersons persons</strong>.</span>
                         </div>
+                    </div>
+
+                    <!-- Actions Layer Framework -->
+                    <div class="d-flex flex-column gap-2 mt-4">
+                        <a asp-action="DeleteService" asp-route-id="@Model.Id" class="btn btn-outline-danger w-100 rounded-3 p-3 fw-medium d-inline-flex align-items-center justify-content-center gap-2">
+                            <i class="bi bi-trash3-fill"></i> Delete Service Profile
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-    .image-hover-card {
-        transition: transform 0.2s ease;
-    }
-    .image-hover-card:hover {
-        transform: scale(1.04);
-    }
-</style>
