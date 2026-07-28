@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System;
 using System.Threading.Tasks;
 using System.Security.Claims;
+using System.Linq;
 using GatherWise.Services.Interfaces;
 using GatherWise.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -58,12 +60,36 @@ namespace GatherWise.Web.Controllers
                 return Forbid(); // Prevents unauthorized injection via raw post requests
             }
 
-            if (ModelState.IsValid)
+            // --- TIME PARITY VALIDATION RULES ---
+            if (slot.StartTime >= slot.EndTime)
             {
-                await _slotService.CreateSlotAsync(slot);
-                return RedirectToAction(nameof(Index));
+                ModelState.AddModelError("", "Closing time must be strictly after the opening time.");
             }
 
+            if (ModelState.IsValid)
+            {
+                // 1. Fetch all existing slots assigned to this specific venue
+                var existingSlots = await _slotService.GetSlotsByVenueIdAsync(slot.VenueId);
+
+                // 2. Filter down to the exact date and test for timeframe conflicts
+                bool hasOverlap = existingSlots.Any(s =>
+                    s.Date.Date == slot.Date.Date &&
+                    slot.StartTime < s.EndTime &&
+                    slot.EndTime > s.StartTime
+                );
+
+                if (hasOverlap)
+                {
+                    ModelState.AddModelError("", "This time slot conflicts or overlaps with an existing scheduled slot for this venue.");
+                }
+                else
+                {
+                    await _slotService.CreateSlotAsync(slot);
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+
+            // Fallback: If logic fails validation rules, repopulate select elements
             var venues = await _venueService.GetAllVenuesAsync();
             if (!User.IsInRole("Admin"))
             {

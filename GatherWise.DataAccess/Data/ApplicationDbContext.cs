@@ -20,9 +20,9 @@ namespace GatherWise.DataAccess.Data
         public DbSet<VendorServiceImage> VendorServiceImages { get; set; }
         public DbSet<VenueImage> VenueImages { get; set; }
         public DbSet<VendorAssignment> VendorAssignments { get; set; }
-
-        // 🚀 ADD THIS LINE TO FIX THE FIRST COMPILATION ERROR:
         public DbSet<BookingService> BookingServices { get; set; }
+
+        public DbSet<UserReport> UserReports { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -96,7 +96,6 @@ namespace GatherWise.DataAccess.Data
                 .HasForeignKey(vi => vi.VenueId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // 🚀 ADD THIS NEW BOUND RELATIONSHIP FOR PRICE TRACKING:
             modelBuilder.Entity<BookingService>()
                 .Property(bs => bs.PriceAtBooking)
                 .HasPrecision(18, 2);

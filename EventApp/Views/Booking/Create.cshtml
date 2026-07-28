@@ -42,8 +42,11 @@
                         </div>
 
                         <div class="mb-4">
-                            <label asp-for="EstimatedGuests" class="form-label fw-semibold">Estimated Guest Attendance</label>
-                            <input asp-for="EstimatedGuests" type="number" class="form-control" placeholder="e.g., 150" />
+                            <label asp-for="EstimatedGuests" class="form-label fw-semibold">Venue Guest Capacity</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted"><i class="bi bi-people-fill"></i></span>
+                                <input asp-for="EstimatedGuests" id="estimatedGuestsInput" type="number" class="form-control bg-light text-secondary fw-semibold" readonly placeholder="Select a venue to view capacity" />
+                            </div>
                             <span asp-validation-for="EstimatedGuests" class="text-danger small"></span>
                         </div>
 
@@ -100,13 +103,14 @@
     }
 
     <script type="text/javascript">
-        document.getElementById("venueDropdown").addEventListener("change", async function () {
-        const venueId = this.value;
+        // Core rendering function separated out so it can be called on demand
+        async function loadAvailableSlots(venueId, preselectedSlotId) {
         const gridContainer = document.getElementById("visual-calendar-grid");
         const spinner = document.getElementById("calendar-loading-spinner");
         const hiddenInput = document.getElementById("hiddenSlotId");
+        const guestsInput = document.getElementById("estimatedGuestsInput");
 
-        hiddenInput.value = ""; // Reset selections upon switching properties
+        hiddenInput.value = preselectedSlotId || "";
             
         if (!venueId) {
         gridContainer.innerHTML = `
@@ -114,6 +118,7 @@
         <i class="bi bi-calendar-x fs-3 d-block mb-1 text-secondary"></i>
         <span class="small">Please select a venue property above to populate active operational dates.</span>
         </div>`;
+        guestsInput.value = "";
         return;
         }
 
@@ -123,7 +128,7 @@
         const slots = await response.json();
         spinner.classList.add("d-none");
 
-        gridContainer.innerHTML = ""; // Wipe container grid clean
+        gridContainer.innerHTML = "";
 
         if (slots.length === 0) {
         gridContainer.innerHTML = `
@@ -131,16 +136,24 @@
         <i class="bi bi-exclamation-triangle fs-3 d-block mb-1"></i>
         <span class="small fw-semibold">No operational slots are currently configured for this venue property.</span>
         </div>`;
+        guestsInput.value = "";
         return;
+        }
+
+        if (slots[0] && slots[0].venueCapacity !== undefined) {
+        guestsInput.value = slots[0].venueCapacity;
         }
 
         slots.forEach(slot => {
         const col = document.createElement("div");
         col.className = "col-sm-6 col-md-4 mb-2";
 
+        // Determine if this item should be visually selected by default (from URL query parameters)
+        const isSelected = (preselectedSlotId && slot.id == preselectedSlotId);
+
         const card = document.createElement("div");
-        card.className = `slot-card-interactive p-3 rounded-3 text-center h-100 bg-white shadow-sm ${slot.isBooked ? 'disabled' : ''}`;
-                    
+        card.className = `slot-card-interactive p-3 rounded-3 text-center h-100 bg-white shadow-sm ${slot.isBooked ? 'disabled' : ''} ${isSelected ? 'selected-slot' : ''}`;
+                                
         card.innerHTML = `
         <div class="fw-bold text-dark small mb-1"><i class="bi bi-calendar-event me-1 text-success"></i> ${slot.date}</div>
         <div class="text-muted x-small">${slot.startTime} - ${slot.endTime}</div>
@@ -149,9 +162,7 @@
 
         if (!slot.isBooked) {
         card.addEventListener("click", function() {
-        // Clear previous selected styling attributes across sibling options
         document.querySelectorAll('.slot-card-interactive').forEach(c => c.classList.remove('selected-slot'));
-        // Apply custom design borders indicating an active option select state
         card.classList.add('selected-slot');
         hiddenInput.value = slot.id;
         });
@@ -164,6 +175,24 @@
         } catch (error) {
         spinner.classList.add("d-none");
         console.error("Error building interactive slot matrix mapping:", error);
+        }
+        }
+
+        // Setup drop-down dynamic listening and page initialization checks
+        document.addEventListener("DOMContentLoaded", function () {
+        const dropdown = document.getElementById("venueDropdown");
+
+        // Event listener for user switching drop-downs manually
+        dropdown.addEventListener("change", function () {
+        loadAvailableSlots(this.value, null);
+        });
+
+        // 🚀 URL Auto-Prefill Route Logic: Read values passed down through C# model pipeline
+        const initialVenueId = "@Model.VenueId";
+        const initialSlotId = "@Model.SlotId";
+
+        if (initialVenueId && initialVenueId !== "0" && initialVenueId !== "") {
+        loadAvailableSlots(initialVenueId, initialSlotId);
         }
         });
     </script>

@@ -1,0 +1,83 @@
+﻿@model List<GatherWise.Domain.ViewModels.UserDisplayInfo>
+
+<div class="table-responsive m-0">
+    <table class="table table-hover align-middle mb-0 border-0">
+        <thead class="table-light text-secondary small text-uppercase tracking-wider">
+            <tr>
+                <th class="ps-4 py-3 border-0">User ID</th>
+                <th class="py-3 border-0">Full Name / Username</th>
+                <th class="py-3 border-0">Email Address</th>
+                <th class="py-3 border-0">Phone Number</th>
+                <th class="py-3 border-0 text-center">Status</th>
+                <th class="pe-4 py-3 border-0 text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model == null || !Model.Any())
+            {
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">
+                        <i class="bi bi-people display-4 d-block mb-3 text-secondary opacity-50"></i>
+                        <p class="mb-0 fw-semibold">No registered user profiles found in this category.</p>
+                    </td>
+                </tr>
+            }
+            else
+            {
+                foreach (var user in Model)
+                {
+                    <tr class="@(!user.IsActive ? "table-danger bg-opacity-10" : "")">
+                        <td class="ps-4 text-muted"><small class="text-monospace">@user.Id</small></td>
+                        <td>
+                            @if (!user.IsActive)
+                            {
+                                <i class="bi bi-slash-circle-fill text-danger me-2" title="Account Banned"></i>
+                                <del class="text-muted">@user.FullName</del>
+                            }
+                            else
+                            {
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                <strong>@user.FullName</strong>
+                            }
+                        </td>
+                        <td><a href="mailto:@user.Email" class="text-decoration-none">@user.Email</a></td>
+                        <td>@user.PhoneNumber</td>
+                        <td class="text-center">
+                            @if (user.IsActive)
+                            {
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-semibold">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger text-white px-3 py-2 rounded-pill fw-semibold">Banned</span>
+                            }
+                        </td>
+                        <td class="pe-4">
+                            <div class="d-flex justify-content-center align-items-center gap-2">
+                                <!-- Triggers Modal Popup Asynchronously via JS instead of navigating away -->
+                                <button type="button" onclick="openInspectorWindow('@user.Id')" class="btn btn-sm btn-outline-secondary rounded-pill px-3" title="View Profile Details">
+                                    <i class="bi bi-eye me-1"></i> Details
+                                </button>
+                                
+                                <form asp-controller="Admin" asp-action="ToggleStatus" asp-route-id="@user.Id" method="post" class="m-0">
+                                    @if (user.IsActive)
+                                    {
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3" title="Ban Account">
+                                            <i class="bi bi-shield-x me-1"></i> Ban
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="submit" class="btn btn-sm btn-success rounded-pill px-3" title="Restore Account">
+                                            <i class="bi bi-shield-check me-1"></i> Restore
+                                        </button>
+                                    }
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

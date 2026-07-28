@@ -18,6 +18,15 @@ namespace EventApp
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
+            builder.Services.AddHttpContextAccessor();
+            builder.Services.AddDistributedMemoryCache();
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(30);
+                options.Cookie.HttpOnly = true;     // Moved under .Cookie
+                options.Cookie.IsEssential = true;   // Moved under .Cookie
+            });
+
             // Register ApplicationDbContext with SQL Server Connection String
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -28,7 +37,9 @@ namespace EventApp
             builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
             builder.Services.AddScoped<IBookingRepository, BookingRepository>();
             builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
+            builder.Services.AddScoped<IAdminRepository, AdminRepository>();
 
+            builder.Services.AddScoped<IAdminService, AdminService>();
             builder.Services.AddScoped<IVenueService, VenueService>();
             builder.Services.AddScoped<ISlotService, SlotService>();
             builder.Services.AddScoped<GatherWise.Services.Interfaces.IBookingService, GatherWise.Services.Implementations.BookingService>();
@@ -51,14 +62,17 @@ namespace EventApp
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
+
+            // 🚀 ADDED: Session middleware placed perfectly before routing/auth execution flows
+            app.UseSession();
+
             app.UseRouting();
-            // CRUCIAL: Make sure Authentication is placed directly BEFORE Authorization
+
             app.UseAuthentication();
             app.UseAuthorization();
 

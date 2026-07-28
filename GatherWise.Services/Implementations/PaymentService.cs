@@ -45,6 +45,13 @@ namespace GatherWise.Services.Implementations
             payment.PaymentMethod = paymentMethod;
             payment.PaymentDate = DateTime.UtcNow;
 
+            // --- FIX: Update the parent Booking entity status ---
+            if (payment.Booking != null)
+            {
+                // Replace 'Confirmed' with whatever your Paid enum option is called in BookingStatus
+                payment.Booking.Status = BookingStatus.Approved;
+            }
+
             await _paymentRepository.SaveChangesAsync();
             return true;
         }

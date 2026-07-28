@@ -98,7 +98,7 @@
                                     }
                                     else if (booking.Status == BookingStatus.Completed)
                                     {
-                                        <span class="badge rounded-pill px-3 py-2 bg-success">Completed (Paid)</span>
+                                        <span class="badge rounded-pill px-3 py-2 bg-success text-white">Completed (Paid)</span>
                                     }
                                     else if (booking.Status == BookingStatus.CancelledByTimeout)
                                     {
@@ -129,9 +129,13 @@
                                     }
                                     else if (booking.Status == BookingStatus.Approved && booking.EventHostId == currentUserId)
                                     {
-                                        <a asp-controller="Payment" asp-action="Pay" asp-route-bookingId="@booking.Id" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
-                                            <i class="bi bi-credit-card"></i> Pay Now
-                                        </a>
+                                        var paymentIds = ViewBag.PaymentIds as Dictionary<int, int>;
+                                        if (paymentIds != null && paymentIds.TryGetValue(booking.Id, out int paymentId))
+                                        {
+                                            <a asp-controller="Payment" asp-action="Checkout" asp-route-id="@paymentId" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
+                                                <i class="bi bi-credit-card"></i> Pay Now
+                                            </a>
+                                        }
                                     }
                                     else
                                     {

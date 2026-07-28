@@ -8,6 +8,12 @@ namespace EventApp.Controllers
     {
         public IActionResult Index()
         {
+            // If the user is logged in and belongs to the Admin role, redirect them to the Admin Dashboard
+            if (User.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+            {
+                return RedirectToAction("Dashboard", "Admin");
+            }
+
             return View();
         }
 

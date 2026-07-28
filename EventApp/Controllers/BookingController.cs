@@ -1,14 +1,17 @@
 ﻿using System;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http; 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using GatherWise.Domain.Entities;
 using GatherWise.Domain.Enums;
+using GatherWise.Domain.ViewModels; 
 using GatherWise.Services.Interfaces;
 using GatherWise.DataAccess.Data;
 
@@ -38,21 +41,32 @@ namespace GatherWise.Web.Controllers
         public async Task<IActionResult> Index()
         {
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+            IEnumerable<Booking> bookings;
 
             if (User.IsInRole("Event Host"))
             {
-                var hostBookings = await _bookingService.GetBookingsByHostIdAsync(currentUserId);
-                return View(hostBookings);
+                bookings = await _bookingService.GetBookingsByHostIdAsync(currentUserId);
             }
-
-            if (User.IsInRole("Venue Owner"))
+            else if (User.IsInRole("Venue Owner"))
             {
-                var ownerBookings = await _bookingService.GetBookingsByOwnerIdAsync(currentUserId);
-                return View(ownerBookings);
+                bookings = await _bookingService.GetBookingsByOwnerIdAsync(currentUserId);
+            }
+            else
+            {
+                bookings = await _bookingService.GetAllBookingsAsync();
             }
 
-            var allBookings = await _bookingService.GetAllBookingsAsync();
-            return View(allBookings);
+            // Fetch payment records for these bookings to pass their IDs to the view
+            var bookingIds = bookings.Select(b => b.Id).ToList();
+
+            // Grabs payment mappings regardless of status to prevent "Invoice Error" text rendering
+            var paymentMappings = await _context.Payments
+                .Where(p => bookingIds.Contains(p.BookingId))
+                .ToDictionaryAsync(p => p.BookingId, p => p.Id);
+
+            ViewBag.PaymentIds = paymentMappings;
+
+            return View(bookings);
         }
 
         // GET: /Booking/Create?venueId=5&slotId=12
@@ -69,6 +83,7 @@ namespace GatherWise.Web.Controllers
                 if (targetedVenue != null)
                 {
                     booking.TotalPrice = targetedVenue.PricePerSlot;
+                    booking.EstimatedGuests = targetedVenue.Capacity; // Prefill model capacity if coming directly from Venue Details
                 }
             }
             if (slotId.HasValue)
@@ -125,7 +140,11 @@ namespace GatherWise.Web.Controllers
         public async Task<JsonResult> GetAvailableSlots(int venueId)
         {
             var allSlots = await _slotService.GetSlotsByVenueIdAsync(venueId);
+            var targetedVenue = await _venueService.GetVenueByIdAsync(venueId);
             var currentDateTime = DateTime.UtcNow;
+
+            // Extract the venue's configured guest capacity directly from the object
+            int venueCapacityValue = targetedVenue?.Capacity ?? 0;
 
             var activeAvailableSlots = allSlots.Where(s =>
                 !s.IsBooked &&
@@ -142,7 +161,8 @@ namespace GatherWise.Web.Controllers
                     date = s.Date.ToString("dd-MMM-yyyy"),
                     startTime = s.StartTime.ToString(@"hh\:mm"),
                     endTime = s.EndTime.ToString(@"hh\:mm"),
-                    isBooked = s.IsBooked
+                    isBooked = s.IsBooked,
+                    venueCapacity = venueCapacityValue // Injected here to resolve UI reflection issues
                 });
             }
             return Json(slotData);
@@ -260,7 +280,18 @@ namespace GatherWise.Web.Controllers
 
                 _context.BookingServices.Add(bookingServiceItem);
 
+                // 1. Update the booking entity's cumulative tracker
                 booking.TotalPrice += service.BasePrice;
+
+                // --- FIX: Find and update the associated pending payment record ---
+                var pendingPayment = await _context.Payments
+                    .FirstOrDefaultAsync(p => p.BookingId == bookingId && p.Status == PaymentStatus.Pending);
+
+                if (pendingPayment != null)
+                {
+                    pendingPayment.Amount = booking.TotalPrice;
+                }
+                // -----------------------------------------------------------------
 
                 await _context.SaveChangesAsync();
             }
@@ -271,6 +302,7 @@ namespace GatherWise.Web.Controllers
         // GET: /Booking/SummaryDetails/5
         public async Task<IActionResult> SummaryDetails(int id)
         {
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var detailedBooking = await _bookingService.GetWithDetailsByIdAsync(id);
 
             if (detailedBooking == null)
@@ -278,13 +310,69 @@ namespace GatherWise.Web.Controllers
                 return NotFound();
             }
 
-            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!User.IsInRole("Admin") && detailedBooking.EventHostId != currentUserId && detailedBooking.Venue?.OwnerId != currentUserId)
             {
                 return Forbid();
             }
 
-            // --- ADDED: 1-Hour Pending Workflow Logic ---
+            // 🚀 NEW FLUSH LOGIC: Transfer Amazon-Session Cart items to Database
+            var sessionData = HttpContext.Session.GetString("ServiceCart");
+            if (!string.IsNullOrEmpty(sessionData))
+            {
+                var cartItems = JsonSerializer.Deserialize<List<CartItemViewModel>>(sessionData);
+
+                if (cartItems != null && cartItems.Any())
+                {
+                    bool databaseUpdated = false;
+
+                    foreach (var item in cartItems)
+                    {
+                        // Check if this service is already linked to the booking to prevent double entries
+                        var alreadyBooked = await _context.BookingServices
+                            .AnyAsync(bs => bs.BookingId == id && bs.VendorServiceId == item.ServiceId);
+
+                        if (!alreadyBooked)
+                        {
+                            var vendorService = await _context.VendorServices.FindAsync(item.ServiceId);
+                            if (vendorService != null)
+                            {
+                                // 1. Add record to relation matrix mapping table
+                                var bookingServiceItem = new BookingService
+                                {
+                                    BookingId = id,
+                                    VendorServiceId = item.ServiceId,
+                                    PriceAtBooking = vendorService.BasePrice
+                                };
+                                _context.BookingServices.Add(bookingServiceItem);
+
+                                // 2. Increment cumulative totals directly inside the tracked booking model
+                                detailedBooking.TotalPrice += vendorService.BasePrice;
+                                databaseUpdated = true;
+                            }
+                        }
+                    }
+
+                    if (databaseUpdated)
+                    {
+                        // 3. Keep the Invoice Billing system synced
+                        var pendingPayment = await _context.Payments
+                            .FirstOrDefaultAsync(p => p.BookingId == id && p.Status == PaymentStatus.Pending);
+
+                        if (pendingPayment != null)
+                        {
+                            pendingPayment.Amount = detailedBooking.TotalPrice;
+                        }
+
+                        // 4. Save tracking alterations to DB
+                        await _context.SaveChangesAsync();
+                    }
+
+                    // 5. Clear out session cart so subsequent page views don't repeat the loop calculation
+                    HttpContext.Session.Remove("ServiceCart");
+                }
+            }
+
+            // --- 1-Hour Pending Workflow Logic ---
             var currentDateTime = DateTime.UtcNow;
             var hoursSinceBooking = (currentDateTime - detailedBooking.CreatedAt).TotalHours;
 
@@ -297,7 +385,6 @@ namespace GatherWise.Web.Controllers
             {
                 ViewBag.ShowOwnerContact = false;
             }
-            // --------------------------------------------
 
             return View(detailedBooking);
         }

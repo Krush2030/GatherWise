@@ -1,19 +1,40 @@
 ﻿@model IEnumerable<GatherWise.Domain.Entities.VendorService>
+@using Microsoft.AspNetCore.Http
+@using System.Text.Json
+@using GatherWise.Domain.ViewModels
 
 @{
     ViewData["Title"] = "Enhance Your Event - Select Services";
     int bookingId = ViewBag.BookingId;
+
+    // 🚀 Dynamic Amazon-style Item Counter Processing Logic
+    int cartItemCount = 0;
+    var sessionData = ViewContext.HttpContext.Session.GetString("ServiceCart");
+    if (!string.IsNullOrEmpty(sessionData))
+    {
+        var deserializedCart = JsonSerializer.Deserialize<List<CartItemViewModel>>(sessionData);
+        if (deserializedCart != null)
+        {
+            cartItemCount = deserializedCart.Count;
+        }
+    }
 }
 
 <div class="container my-5">
     <!-- Progress Header Tracker Bar -->
     <div class="row mb-4 align-items-center">
-        <div class="col-md-8">
+        <div class="col-md-6">
             <span class="badge bg-success text-uppercase px-3 py-2 rounded-pill mb-2 shadow-sm">Step 2 of 2</span>
             <h2 class="fw-bold text-dark mb-1">Enhance Your Event Itinerary</h2>
             <p class="text-muted mb-0">Select from our verified professional vendors to fulfill your catering, decoration, or media operational needs.</p>
         </div>
-        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <div class="col-md-6 text-md-end mt-3 mt-md-0 d-flex flex-wrap justify-content-md-end gap-2">
+            <!-- 🚀 UPDATED: Conditional Cart Badge Rendering Logic -->
+            <a asp-controller="Cart" asp-action="Index" asp-route-bookingId="@bookingId" class="btn btn-warning fw-bold px-4 rounded-pill shadow-sm">
+                <i class="bi bi-cart3 me-1"></i>
+                View Selection Cart@(cartItemCount > 0 ? $" ({cartItemCount})" : "")
+            </a>
+            
             <a asp-action="SummaryDetails" asp-route-id="@bookingId" class="btn btn-dark rounded-pill px-4 shadow-sm fw-semibold">
                 Finish & View Summary <i class="bi bi-arrow-right-circle-fill ms-1"></i>
             </a>
@@ -74,13 +95,13 @@
                             </div>
 
                             <!-- Form Execution Interactive Element Button -->
-                            <form asp-action="BookService" method="post">
+                            <form asp-controller="Cart" asp-action="AddToCart" method="post">
                                 @Html.AntiForgeryToken()
-                                <input type="hidden" name="bookingId" value="@bookingId" />
                                 <input type="hidden" name="serviceId" value="@item.Id" />
+                                <input type="hidden" name="bookingId" value="@bookingId" />
                                 
                                 <button type="submit" class="btn btn-outline-success w-100 rounded-pill fw-semibold btn-sm py-2 d-flex align-items-center justify-content-center gap-2">
-                                    <i class="bi bi-cart-plus-fill"></i> Add to This Booking
+                                    <i class="bi bi-cart-plus"></i> Add to Cart
                                 </button>
                             </form>
                         </div>

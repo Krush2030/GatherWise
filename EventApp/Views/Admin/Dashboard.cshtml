@@ -1,0 +1,169 @@
+﻿@model GatherWise.Domain.ViewModels.AdminUserDashboardViewModel
+
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="container-fluid mt-4">
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm rounded-3 mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <h1 class="h2 text-dark"><i class="bi bi-shield-lock-fill text-primary me-2"></i>Administration Management Console</h1>
+        <span class="badge bg-secondary p-2">Role: Administrator</span>
+    </div>
+
+    <!-- Nav tabs for categorization -->
+    <ul class="nav nav-pills mb-4" id="adminDashboardTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="hosts-tab" data-bs-toggle="tab" data-bs-target="#hosts" type="button" role="tab" aria-controls="hosts" aria-selected="true">
+                <i class="bi bi-people-fill me-2"></i>Event Hosts (@Model.EventHosts.Count)
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="owners-tab" data-bs-toggle="tab" data-bs-target="#owners" type="button" role="tab" aria-controls="owners" aria-selected="false">
+                <i class="bi bi-building me-2"></i>Venue Owners (@Model.VenueOwners.Count)
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="vendors-tab" data-bs-toggle="tab" data-bs-target="#vendors" type="button" role="tab" aria-controls="vendors" aria-selected="false">
+                <i class="bi bi-shop me-2"></i>Vendors (@Model.Vendors.Count)
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab panes contents -->
+    <div class="tab-content" id="adminDashboardTabsContent">
+        
+        <!-- EVENT HOSTS TAB -->
+        <div class="tab-pane fade show active" id="hosts" role="tabpanel" aria-labelledby="hosts-tab">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0 text-primary">Registered Event Hosts</h5>
+                </div>
+                <div class="card-body p-0">
+                    @await Html.PartialAsync("_UserTablePartial", Model.EventHosts)
+                </div>
+            </div>
+        </div>
+
+        <!-- VENUE OWNERS TAB -->
+        <div class="tab-pane fade" id="owners" role="tabpanel" aria-labelledby="owners-tab">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0 text-success">Registered Venue Owners</h5>
+                </div>
+                <div class="card-body p-0">
+                    @await Html.PartialAsync("_UserTablePartial", Model.VenueOwners)
+                </div>
+            </div>
+        </div>
+
+        <!-- VENDORS TAB -->
+        <div class="tab-pane fade" id="vendors" role="tabpanel" aria-labelledby="vendors-tab">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="card-title mb-0 text-info">Registered Vendors</h5>
+                </div>
+                <div class="card-body p-0">
+                    @await Html.PartialAsync("_UserTablePartial", Model.Vendors)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Infraction Report Processing Pipeline Component -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 rounded-3">
+                <div class="card-header bg-dark text-white py-3">
+                    <h5 class="card-title mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-inbox-fill text-danger"></i> System Infraction Report Processing Pipeline
+                    </h5>
+                </div>
+                <div class="card-body bg-light bg-opacity-20">
+                    @{
+                        var reportsQueue = ViewBag.UnresolvedReports as List<GatherWise.Domain.Entities.UserReport>;
+                        var userDict = ViewBag.SystemUsers as Dictionary<string, string> ?? new Dictionary<string, string>();
+                    }
+
+                    @if (reportsQueue == null || !reportsQueue.Any())
+                    {
+                        <div class="text-center py-4 text-muted">
+                            <i class="bi bi-check-circle display-6 d-block mb-2 text-success opacity-50"></i>
+                            <p class="mb-0 small fw-medium">All incoming user ticketing reports resolved and operational indices clean.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive m-0">
+                            <table class="table table-hover align-middle bg-white rounded-3 overflow-hidden shadow-sm border border-light">
+                                <thead class="table-light text-secondary small text-uppercase">
+                                    <tr>
+                                        <th>Filing Date</th>
+                                        <th>Reporter Identity</th>
+                                        <th>Accused Profile</th>
+                                        <th style="width: 40%;">Incident Details</th>
+                                        <th class="text-center">Action Framework Pipeline</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var ticket in reportsQueue)
+                                    {
+                                        var reporter = userDict.ContainsKey(ticket.ReporterId) ? userDict[ticket.ReporterId] : "Unknown ID";
+                                        var accused = userDict.ContainsKey(ticket.ReportedUserId) ? userDict[ticket.ReportedUserId] : "Unknown ID";
+                                        
+                                        <tr>
+                                            <td class="small font-monospace text-muted">@ticket.CreatedAt.ToLocalTime().ToString("g")</td>
+                                            <td class="fw-semibold text-primary">@reporter</td>
+                                            <td class="fw-semibold text-danger">@accused</td>
+                                            <td class="small text-secondary" style="white-space: pre-line;">@ticket.Description</td>
+                                            <td>
+                                                <!-- Resolution Modal Trigger Inline Form -->
+                                                <form asp-controller="Report" asp-action="Resolve" asp-route-id="@ticket.Id" method="post" class="d-flex gap-2 align-items-center justify-content-end">
+                                                    <input type="text" name="adminReply" class="form-control form-control-sm rounded-pill px-3 text-xs" required
+                                                           placeholder="Type solution message / action confirmation reply text here..." style="min-width: 200px;" />
+                                                    <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 whitespace-nowrap">
+                                                        <i class="bi bi-check2-circle"></i> Resolve & Route
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reusable User Detail Inspection Modal Wrapper -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4" id="detailsModalTargetContent">
+            <!-- Asynchronous Partial Content Injection Target -->
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openInspectorWindow(userId) {
+            $.get('/Admin/Details/' + userId, function (htmlResponse) {
+                $('#detailsModalTargetContent').html(htmlResponse);
+                var elementInstance = new bootstrap.Modal(document.getElementById('detailsModal'));
+                elementInstance.show();
+            }).fail(function() {
+                alert("Error loading user profile system metrics. Please check connection maps.");
+            });
+        }
+    </script>
+}

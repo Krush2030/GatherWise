@@ -1,0 +1,65 @@
+﻿@model GatherWise.Domain.ViewModels.UserDisplayInfo
+
+<div class="modal-header border-bottom py-3 px-4">
+    <h5 class="modal-title d-flex align-items-center gap-2 fw-bold text-dark" id="detailsModalLabel">
+        <i class="bi bi-person-lines-fill text-primary"></i> Profile System Metadata
+    </h5>
+    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body p-4">
+    <div class="text-center mb-4">
+        <div class="d-inline-flex align-items-center justify-content-center bg-light rounded-circle p-3 mb-3" style="width: 80px; height: 80px;">
+            <i class="bi bi-person text-secondary display-6"></i>
+        </div>
+        <h4 class="fw-bold text-dark mb-1">@Model.FullName</h4>
+        <span class="small text-muted tracking-wide text-uppercase font-monospace">System UID: @Model.Id</span>
+    </div>
+
+    <div class="card border border-light bg-light bg-opacity-50 rounded-3 p-3 mb-4">
+        <div class="row g-3">
+            <div class="col-12">
+                <label class="small text-muted d-block text-uppercase fw-semibold tracking-wide mb-1">Email Coordinates</label>
+                <span class="text-dark fw-medium">@Model.Email</span>
+            </div>
+            <div class="col-12 border-top border-light pt-2">
+                <label class="small text-muted d-block text-uppercase fw-semibold tracking-wide mb-1">Phone Line connection</label>
+                <span class="text-dark fw-medium">@Model.PhoneNumber</span>
+            </div>
+            <div class="col-12 border-top border-light pt-2">
+                <label class="small text-muted d-block text-uppercase fw-semibold tracking-wide mb-1">Current Account Gate State</label>
+                <div>
+                    @if (Model.IsActive)
+                    {
+                        <span class="badge bg-success-subtle text-success border border-success border-opacity-20 px-3 py-2 rounded-pill fw-semibold">
+                            <i class="bi bi-check-circle-fill me-1"></i> Authorized / Active
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger text-white px-3 py-2 rounded-pill fw-semibold">
+                            <i class="bi bi-shield-slash-fill me-1"></i> Banned / Blacklisted
+                        </span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+        <button type="button" class="btn btn-light border rounded-pill px-4 fw-medium" data-bs-dismiss="modal">Dismiss Window</button>
+        <form asp-controller="Admin" asp-action="ToggleStatus" asp-route-id="@Model.Id" method="post" class="m-0">
+            @if (Model.IsActive)
+            {
+                <button type="submit" class="btn btn-danger rounded-pill px-4 fw-medium">
+                    <i class="bi bi-shield-x me-1"></i> Suspend User
+                </button>
+            }
+            else
+            {
+                <button type="submit" class="btn btn-success rounded-pill px-4 fw-medium">
+                    <i class="bi bi-shield-check me-1"></i> Lift Blacklist
+                </button>
+            }
+        </form>
+    </div>
+</div>

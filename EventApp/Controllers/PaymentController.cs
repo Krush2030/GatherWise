@@ -12,7 +12,7 @@ namespace GatherWise.Web.Controllers
     public class PaymentController : Controller
     {
         private readonly IPaymentService _paymentService;
-        private readonly IBookingService _bookingService; // Injected for updating booking status on timeout
+        private readonly IBookingService _bookingService; // Injected for updating booking status
         private readonly ISlotService _slotService;       // Injected for releasing slots back to pool
 
         public PaymentController(
@@ -127,6 +127,10 @@ namespace GatherWise.Web.Controllers
             var success = await _paymentService.ProcessPaymentAsync(id, paymentMethod);
             if (success)
             {
+                // --- FIXED: Update Parent Booking status to Completed system-wide ---
+                await _bookingService.UpdateBookingStatusAsync(booking.Id, BookingStatus.Completed);
+                // ---------------------------------------------------------------------
+
                 TempData["SuccessMessage"] = "Payment processed successfully! Your booking is locked.";
                 return RedirectToAction(nameof(Index));
             }

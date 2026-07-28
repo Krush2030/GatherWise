@@ -1,0 +1,95 @@
+﻿@model IEnumerable<GatherWise.Domain.ViewModels.CartItemViewModel>
+
+@{
+    ViewData["Title"] = "Service Selection Staging Cart";
+    decimal cartTotal = Model.Sum(item => item.Price);
+}
+
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
+        <div>
+            <h2 class="fw-bold text-dark mb-0"><i class="bi bi-cart3 me-2 text-success"></i>Service Review Basket</h2>
+            <p class="text-muted small mb-0">Review items staged for Event Reservation Reference ID: #@ViewBag.BookingId</p>
+        </div>
+        <a asp-controller="Booking" asp-action="SelectServices" asp-route-bookingId="@ViewBag.BookingId" class="btn btn-outline-secondary rounded-pill px-4">
+            <i class="bi bi-arrow-left me-1"></i> Add More Items
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                @if (!Model.Any())
+                {
+                    <div class="text-center py-5">
+                        <i class="bi bi-cart-x text-muted fs-1 mb-3 d-block"></i>
+                        <h5 class="fw-bold text-secondary">Your cart is empty</h5>
+                        <p class="text-muted small">Head back to the options library to associate service elements.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle table-borderless">
+                            <thead>
+                                <tr class="table-light small text-uppercase font-monospace text-secondary">
+                                    <th>Item Details</th>
+                                    <th>Category</th>
+                                    <th class="text-end">Price</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    <tr class="border-bottom border-light">
+                                        <td>
+                                            <div class="d-flex align-items-center gap-3">
+                                                <img src="@item.MainPhotoPath" class="rounded-3" style="width: 60px; height: 60px; object-fit: cover;" alt="" />
+                                                <div>
+                                                    <h6 class="fw-bold text-dark mb-0">@item.ServiceName</h6>
+                                                    <small class="text-muted"><i class="bi bi-shop me-1 text-primary"></i>By: @item.VendorName</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border px-3 py-2 rounded-pill">@item.Category</span>
+                                        </td>
+                                        <td class="text-end fw-bold text-dark">₹@item.Price.ToString("N2")</td>
+                                        <td class="text-center">
+                                            <form asp-controller="Cart" asp-action="RemoveFromCart" method="post">
+                                                <input type="hidden" name="serviceId" value="@item.ServiceId" />
+                                                <input type="hidden" name="bookingId" value="@ViewBag.BookingId" />
+                                                <button type="submit" class="btn btn-sm btn-link text-danger p-0" title="Remove from basket">
+                                                    <i class="bi bi-trash3 fs-5"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Checkout Column -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 sticky-top" style="top: 2rem;">
+                <h5 class="fw-bold text-dark mb-3 pb-2 border-bottom"><i class="bi bi-wallet2 text-success me-2"></i>Order Aggregations</h5>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-secondary small">Staged Elements (@Model.Count())</span>
+                    <span class="fw-bold text-dark">₹@cartTotal.ToString("N2")</span>
+                </div>
+                
+                <form asp-controller="Cart" asp-action="ConfirmSelection" method="post">
+                    <input type="hidden" name="bookingId" value="@ViewBag.BookingId" />
+                    <button type="submit" class="btn btn-success rounded-pill fw-bold w-100 py-2.5 shadow-sm" @(Model.Any() ? "" : "disabled")>
+                        <i class="bi bi-check2-circle me-2"></i> Lock & Apply Choices
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
