@@ -32,13 +32,16 @@ namespace EventApp
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(connectionString));
 
+            // --- Repository Registrations ---
             builder.Services.AddScoped<IVenueRepository, VenueRepository>();
             builder.Services.AddScoped<ISlotRepository, SlotRepository>();
             builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
             builder.Services.AddScoped<IBookingRepository, BookingRepository>();
             builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
             builder.Services.AddScoped<IAdminRepository, AdminRepository>();
+            builder.Services.AddScoped<IChatRepository, ChatRepository>();
 
+            // --- Service Registrations ---
             builder.Services.AddScoped<IAdminService, AdminService>();
             builder.Services.AddScoped<IVenueService, VenueService>();
             builder.Services.AddScoped<ISlotService, SlotService>();
@@ -68,7 +71,7 @@ namespace EventApp
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
-            // 🚀 ADDED: Session middleware placed perfectly before routing/auth execution flows
+            // Session middleware placed perfectly before routing/auth execution flows
             app.UseSession();
 
             app.UseRouting();

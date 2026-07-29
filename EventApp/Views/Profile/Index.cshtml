@@ -46,7 +46,6 @@
                     <h4 class="mb-0 fw-bold text-white">Profile Identity Hub</h4>
                     <p class="text-white-50 small mb-0">Review account profiles, dynamic settings, and quick platform action links.</p>
                     
-                    <!-- USER REPORTING LOG HISTORY ROUTING ENTRY ELEMENT -->
                     <div class="mt-3">
                         <a asp-controller="Report" asp-action="History" class="btn btn-outline-light rounded-pill px-4 btn-sm">
                             <i class="bi bi-journal-text me-1"></i> View Submitted Reports & Admin Feedback
@@ -111,7 +110,7 @@
                             </div>
                         </div>
 
-                        <!-- Secondary Conditional Profile Elements inside left column form -->
+                        <!-- Secondary Conditional Profile Elements -->
                         @if (Model.CurrentRole == "Vendor")
                         {
                             <h5 class="fw-bold text-dark mb-3 border-bottom pt-2 pb-2">
@@ -140,7 +139,7 @@
                     </form>
                 </div>
 
-                <!-- Right Column: Asymmetrical Role Actions & Listings Analytics Engine -->
+                <!-- Right Column: Role Actions & Analytics Panels -->
                 <div class="col-12 col-xl-6">
                     <div class="dashboard-panel rounded-4 p-4 h-100">
                         
@@ -150,9 +149,8 @@
                             <h5 class="fw-bold text-dark mb-3"><i class="bi bi-grid-1x2-fill text-success me-2"></i>Host Dashboard Engine</h5>
                             <p class="text-muted small mb-4">Track event arrangements, spatial reservation items, and active settlement workflows easily.</p>
                             
-                            <!-- Large Dashboard Trigger Button Module -->
                             <div class="d-flex flex-column gap-3">
-                                <a asp-controller="Booking" asp-action="MyBookings" class="btn btn-white text-start p-4 rounded-4 action-card-btn shadow-sm border d-flex justify-content-between align-items-center">
+                                <a asp-controller="Booking" asp-action="MyBookings" class="btn btn-white text-start p-4 rounded-4 action-card-btn shadow-sm border d-flex justify-content-between align-items-center bg-white text-decoration-none">
                                     <div class="d-flex align-items-center gap-3">
                                         <div class="bg-success bg-opacity-10 text-success p-3 rounded-3"><i class="bi bi-calendar-check-fill fs-4"></i></div>
                                         <div>
@@ -175,31 +173,30 @@
                         {
                             <h5 class="fw-bold text-dark mb-3"><i class="bi bi-building-fill text-primary me-2"></i>Estate Assets Overview</h5>
                             
-                            <!-- Global Hub Actions Routing Panel -->
                             <div class="row g-2 mb-4">
                                 <div class="col-6">
-                                    <a asp-controller="Venue" asp-action="MyVenues" class="btn btn-primary w-100 p-3 rounded-3 fw-bold small shadow-sm d-flex flex-column gap-1 align-items-center text-center">
+                                    <a asp-controller="Venue" asp-action="MyVenues" class="btn btn-primary w-100 p-3 rounded-3 fw-bold small shadow-sm d-flex flex-column gap-1 align-items-center text-center text-decoration-none">
                                         <i class="bi bi-houses-fill fs-5"></i> View All Venues (@Model.TotalActiveListingsCount)
                                     </a>
                                 </div>
                                 <div class="col-6">
-                                    <a asp-controller="Booking" asp-action="VenueBookings" class="btn btn-dark w-100 p-3 rounded-3 fw-bold small shadow-sm d-flex flex-column gap-1 align-items-center text-center">
+                                    <a asp-controller="Booking" asp-action="VenueBookings" class="btn btn-dark w-100 p-3 rounded-3 fw-bold small shadow-sm d-flex flex-column gap-1 align-items-center text-center text-decoration-none">
                                         <i class="bi bi-cash-coin fs-5"></i> Venue Bookings & Payouts
                                     </a>
                                 </div>
                             </div>
 
                             <h6 class="fw-bold text-secondary text-uppercase small tracking-wider mb-3">Top Architectural Listings</h6>
-                            @if (!Model.TopVenues.Any())
+                            @if (Model.TopVenues == null || !Model.TopVenues.Any())
                             {
-                                <div class="bg-white rounded-3 p-4 text-center border border-dashed">
+                                <div class="bg-white rounded-3 p-4 text-center border border-dashed mb-4">
                                     <p class="text-muted small mb-0">No venue items registered under this portfolio account context node.</p>
                                     <a asp-controller="Venue" asp-action="Create" class="btn btn-link btn-sm fw-bold text-primary mt-2">Add First Venue</a>
                                 </div>
                             }
                             else
                             {
-                                <div class="d-flex flex-column gap-2">
+                                <div class="d-flex flex-column gap-2 mb-4">
                                     @foreach (var venue in Model.TopVenues)
                                     {
                                         <div class="bg-white p-3 rounded-3 border d-flex justify-content-between align-items-center shadow-sm">
@@ -215,6 +212,43 @@
                                     }
                                 </div>
                             }
+
+                            <!-- Mediation & Infraction Reports Interface -->
+                            <h6 class="fw-bold text-danger text-uppercase small tracking-wider mb-3 mt-4">
+                                <i class="bi bi-exclamation-octagon-fill me-1"></i> Active Mediation & System Reports
+                            </h6>
+                            @if (Model.AssociatedReports == null || !Model.AssociatedReports.Any())
+                            {
+                                <div class="bg-white rounded-3 p-4 text-center border border-dashed">
+                                    <p class="text-muted small mb-0">Your reporting ledger is completely clear. No compliance entries target this context profile.</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="d-flex flex-column gap-2">
+                                    @foreach (var report in Model.AssociatedReports)
+                                    {
+                                        <div class="bg-white p-3 rounded-3 border d-flex justify-content-between align-items-center shadow-sm">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="rounded-circle bg-danger bg-opacity-10 text-danger d-flex align-items-center justify-content-center" style="width:36px; height:36px;">
+                                                    <i class="bi bi-chat-left-text-fill"></i>
+                                                </div>
+                                                <div>
+                                                    <span class="fw-bold text-dark d-block small">Report Ticket #@report.Id</span>
+                                                    <small class="text-muted d-block text-truncate" style="max-width: 220px;">@report.Description</small>
+                                                </div>
+                                            </div>
+                                            <!-- CORRECTED TAG HELPERS MAPPING TO TICKETROOM -->
+                                            <a asp-controller="ReportChat"
+                                                   asp-action="TicketRoom"
+                                                   asp-route-id="@report.Id"
+                                                   class="btn btn-sm btn-danger rounded-pill px-3 fw-semibold small text-decoration-none">
+                                                <i class="bi bi-chat-dots-fill me-1"></i> Open Chat
+                                            </a>
+                                        </div>
+                                    }
+                                </div>
+                            }
                         }
 
                         @* --- INTERFACE LAYER C: VENDOR MANAGEMENT BOARD --- *@
@@ -222,22 +256,21 @@
                         {
                             <h5 class="fw-bold text-dark mb-3"><i class="bi bi-shop text-info me-2"></i>Merchant Operations Control</h5>
                             
-                            <!-- Vendor Dynamic Operational Actions Hub -->
                             <div class="row g-2 mb-4">
                                 <div class="col-6">
-                                    <a asp-controller="Vendor" asp-action="MyServices" class="btn btn-info text-dark w-100 p-3 rounded-3 fw-bold small shadow-sm d-flex flex-column gap-1 align-items-center text-center">
+                                    <a asp-controller="Vendor" asp-action="MyServices" class="btn btn-info text-dark w-100 p-3 rounded-3 fw-bold small shadow-sm d-flex flex-column gap-1 align-items-center text-center text-decoration-none">
                                         <i class="bi bi-tags-fill fs-5"></i> Managed Services (@Model.TotalActiveListingsCount)
                                     </a>
                                 </div>
                                 <div class="col-6">
-                                    <a asp-controller="Vendor" asp-action="Payments" class="btn btn-dark w-100 p-3 rounded-3 fw-bold small shadow-sm d-flex flex-column gap-1 align-items-center text-center">
+                                    <a asp-controller="Vendor" asp-action="Payments" class="btn btn-dark w-100 p-3 rounded-3 fw-bold small shadow-sm d-flex flex-column gap-1 align-items-center text-center text-decoration-none">
                                         <i class="bi bi-credit-card-2-back-fill fs-5"></i> Recent Payments Log
                                     </a>
                                 </div>
                             </div>
 
                             <h6 class="fw-bold text-secondary text-uppercase small tracking-wider mb-3">Active Services Marketplace Registry</h6>
-                            @if (!Model.TopServices.Any())
+                            @if (Model.TopServices == null || !Model.TopServices.Any())
                             {
                                 <div class="bg-white rounded-3 p-4 text-center border border-dashed">
                                     <p class="text-muted small mb-0">No operational services mapped to this commercial node.</p>

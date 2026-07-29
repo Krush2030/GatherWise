@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using GatherWise.DataAccess.Data;
 using GatherWise.Domain.Entities;
 using GatherWise.Domain.ViewModels;
-using GatherWise.Domain.Enums; // Added to evaluate BookingStatus
+using GatherWise.Domain.Enums;
 
 namespace GatherWise.Web.Controllers
 {
@@ -49,14 +49,11 @@ namespace GatherWise.Web.Controllers
             // ---- Role-Driven Dashboard Aggregation Pipeline ----
             if (primaryRole == "Event Host")
             {
-                // FIXED: Using exact schema structural mapping 'EventHostId'
                 var hostBookingsQuery = _context.Set<Booking>()
                     .Where(b => b.EventHostId == userId);
 
                 model.TotalBookingsCount = await hostBookingsQuery.CountAsync();
 
-                // FIXED: Using exact schema mapping 'TotalPrice' and evaluating via 'BookingStatus.Confirmed' or 'Paid'
-                // Note: Adjust the status mapping if your exact enum naming differs (e.g., BookingStatus.Paid)
                 model.TotalRevenueOrExpenditure = await hostBookingsQuery
                     .Where(b => b.Status == BookingStatus.Approved || b.Status.ToString() == "Paid")
                     .SumAsync(b => b.TotalPrice);
@@ -74,6 +71,12 @@ namespace GatherWise.Web.Controllers
                 // Populate summary statistics from bookings matching owner venues
                 model.TotalBookingsCount = await _context.Set<Booking>()
                     .CountAsync(b => b.Venue != null && b.Venue.OwnerId == userId);
+
+                // FIXED: Filter out resolved reports so they disappear once the Admin clicks resolve
+                model.AssociatedReports = await _context.UserReports
+                    .Where(r => (r.ReporterId == userId || r.ReportedUserId == userId) && !r.IsResolved)
+                    .OrderByDescending(r => r.CreatedAt)
+                    .ToListAsync();
             }
             else if (primaryRole == "Vendor")
             {
@@ -89,7 +92,6 @@ namespace GatherWise.Web.Controllers
                     model.TopServices = vendorProfile.Services.Take(3).ToList();
                     model.TotalActiveListingsCount = vendorProfile.Services.Count;
 
-                    // FIXED: Traversed the intermediate junction table tracking ('BookingService') to count bookings
                     model.TotalBookingsCount = await _context.Set<BookingService>()
                         .CountAsync(bs => bs.VendorService != null && bs.VendorService.VendorId == vendorProfile.Id);
                 }

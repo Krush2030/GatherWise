@@ -108,8 +108,8 @@
                                         <th>Filing Date</th>
                                         <th>Reporter Identity</th>
                                         <th>Accused Profile</th>
-                                        <th style="width: 40%;">Incident Details</th>
-                                        <th class="text-center">Action Framework Pipeline</th>
+                                        <th style="width: 35%;">Incident Details</th>
+                                        <th class="text-end" style="width: 35%;">Action Framework Pipeline</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -124,14 +124,23 @@
                                             <td class="fw-semibold text-danger">@accused</td>
                                             <td class="small text-secondary" style="white-space: pre-line;">@ticket.Description</td>
                                             <td>
-                                                <!-- Resolution Modal Trigger Inline Form -->
-                                                <form asp-controller="Report" asp-action="Resolve" asp-route-id="@ticket.Id" method="post" class="d-flex gap-2 align-items-center justify-content-end">
-                                                    <input type="text" name="adminReply" class="form-control form-control-sm rounded-pill px-3 text-xs" required
-                                                           placeholder="Type solution message / action confirmation reply text here..." style="min-width: 200px;" />
-                                                    <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 whitespace-nowrap">
-                                                        <i class="bi bi-check2-circle"></i> Resolve & Route
-                                                    </button>
-                                                </form>
+                                                <div class="d-flex align-items-center justify-content-end gap-2">
+                                                    <!-- LINK TO OPEN CHAT ROOM BETWEEN ADMIN & VENUE OWNER -->
+                                                    <a asp-controller="ReportChat" asp-action="TicketRoom" asp-route-id="@ticket.Id"
+                                                           class="btn btn-sm btn-outline-dark rounded-pill px-3 d-inline-flex align-items-center gap-1.5 whitespace-nowrap">
+                                                        <i class="bi bi-chat-text-fill text-success"></i> Owner Consultation
+                                                    </a>
+
+                                                    <!-- Resolution Modal Trigger Inline Form -->
+                                                    <form asp-controller="Report" asp-action="Resolve" asp-route-id="@ticket.Id" method="post" class="d-flex gap-2 align-items-center m-0">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="text" name="adminReply" class="form-control form-control-sm rounded-pill px-3 text-xs" required
+                                                               placeholder="Type solution message..." style="min-width: 160px;" />
+                                                        <button type="submit" class="btn btn-sm btn-success rounded-pill px-3 whitespace-nowrap">
+                                                            <i class="bi bi-check2-circle"></i> Resolve & Route
+                                                        </button>
+                                                    </form>
+                                                </div>
                                             </td>
                                         </tr>
                                     }

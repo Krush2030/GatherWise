@@ -21,8 +21,8 @@ namespace GatherWise.DataAccess.Data
         public DbSet<VenueImage> VenueImages { get; set; }
         public DbSet<VendorAssignment> VendorAssignments { get; set; }
         public DbSet<BookingService> BookingServices { get; set; }
-
         public DbSet<UserReport> UserReports { get; set; }
+        public DbSet<AdminOwnerChatMessage> AdminOwnerChatMessages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -99,6 +99,12 @@ namespace GatherWise.DataAccess.Data
             modelBuilder.Entity<BookingService>()
                 .Property(bs => bs.PriceAtBooking)
                 .HasPrecision(18, 2);
+
+            modelBuilder.Entity<AdminOwnerChatMessage>()
+                .HasOne(m => m.UserReport)
+                .WithMany()
+                .HasForeignKey(m => m.UserReportId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

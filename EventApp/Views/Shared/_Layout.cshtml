@@ -172,6 +172,16 @@
                             </a>
                         </li>
 
+                        <!-- DEDICATED VENUE OWNER/ADMIN ACCESSIBLE PIPELINE -->
+                        @if (SignInManager.IsSignedIn(User) && (User.IsInRole("Venue Owner") || User.IsInRole("Admin")))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link fw-semibold text-success px-3 py-2" asp-area="" asp-controller="Slot" asp-action="Index">
+                                    <i class="bi bi-calendar3 me-1"></i> Manage Slots
+                                </a>
+                            </li>
+                        }
+
                         <!-- SECURED ROLE FILTER: Only Visible explicitly to verified Vendor Identities -->
                         @if (SignInManager.IsSignedIn(User) && User.IsInRole("Vendor"))
                         {

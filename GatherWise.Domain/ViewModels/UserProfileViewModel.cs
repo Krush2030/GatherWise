@@ -34,6 +34,9 @@ namespace GatherWise.Domain.ViewModels
         public List<Venue> TopVenues { get; set; } = new();
         public List<VendorService> TopServices { get; set; } = new();
 
+        // NEW PIPELINE: Fetch unresolved infraction reports targeting or submitted by this Venue Owner
+        public List<GatherWise.Domain.Entities.UserReport> AssociatedReports { get; set; } = new List<GatherWise.Domain.Entities.UserReport>();
+
         // Counter Metaphors for Analytics Widgets
         public int TotalBookingsCount { get; set; }
         public int TotalActiveListingsCount { get; set; }

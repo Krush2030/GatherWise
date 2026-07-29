@@ -71,20 +71,32 @@ namespace GatherWise.Web.Controllers
             return RedirectToAction("History");
         }
 
-        // GET: /Report/History (Accessible by Event Hosts / Venue Owners)
+        // GET: /Report/History
         public async Task<IActionResult> History()
         {
+            // 1. Get the current logged-in user's ID
             var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(currentUserId)) return Challenge();
 
-            // Gather all reports submitted by the logged-in user
+            // 2. Fetch all reports related to this specific user context (both sent and received)
             var reports = await _context.Set<UserReport>()
-                .Where(r => r.ReporterId == currentUserId)
+                .Where(r => r.ReporterId == currentUserId || r.ReportedUserId == currentUserId)
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
 
-            // Build dynamic resolution maps for display
-            var userMap = await _context.Users.ToDictionaryAsync(u => u.Id, u => u.FullName ?? u.UserName);
+            // 3. Extract unique IDs to construct the UserMap mapping dictionary for names
+            var involvedUserIds = reports.Select(r => r.ReportedUserId)
+                .Concat(reports.Select(r => r.ReporterId))
+                .Distinct()
+                .ToList();
+
+            var userMap = await _context.Users
+                .Where(u => involvedUserIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id, u => u.FullName ?? u.UserName ?? "Unknown Account");
+
+            // 4. Send mappings to view through ViewBag
             ViewBag.UserMap = userMap;
+            ViewBag.CurrentUserId = currentUserId;
 
             return View(reports);
         }
